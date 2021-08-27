@@ -86,9 +86,17 @@ export const LogIn: React.FC<LoginModeTypes> = ({
     setErrorMsg("");
   }, [signInMode]);
 
+  useEffect(() => {
+    if (errorMsg !== "") {
+      setTimeout(() => {
+        setErrorMsg("");
+      }, 2000);
+    }
+  }, [errorMsg]);
+
   return (
     <>
-      <div className="w-full h-screen min-h-screen fixed top-0 left-0 flex justify-center items-center bg-white">
+      <div className="w-full h-screen min-h-screen fixed top-0 left-0 flex justify-center items-center bg-white ">
         <FontAwesomeIcon
           onClick={handleLoginMode}
           icon={faTimesCircle}
@@ -143,7 +151,7 @@ export const LogIn: React.FC<LoginModeTypes> = ({
                   )}
                   <button
                     type="submit"
-                    className="w-full mt-5 text-lg  bg-blue-800 text-center py-3 text-gray-500 cursor-pointer hover:text-gray-300 transition-colors"
+                    className="w-full mt-5 text-lg  bg-blue-800 text-center py-3 text-gray-500 cursor-pointer hover:text-gray-300 transition-colors "
                   >
                     가입하기
                   </button>
