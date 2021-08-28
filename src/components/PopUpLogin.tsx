@@ -1,0 +1,39 @@
+import { faTimes, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useEffect } from "react";
+import { PopUpLoginTypes } from "../types/PopUpLogin.types";
+import { isLoggedIn } from "../utils/utils";
+import { LoginCore } from "./LoginCore";
+
+export const PopUpLogin: React.FC<PopUpLoginTypes> = ({
+  popUpLoginMode,
+  setPopUpLoginMode,
+}) => {
+  useEffect(() => {
+    if (isLoggedIn()) {
+      setPopUpLoginMode(false);
+    }
+
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  return (
+    <div className="absolute top-0 left-0 w-full h-screen backdrop-filter backdrop-blur-sm flex justify-center items-center">
+      <div className="absolute top-0 left-0 w-full h-full bg-black opacity-60"></div>
+      <FontAwesomeIcon
+        icon={faTimesCircle}
+        onClick={() => setPopUpLoginMode(false)}
+        className="fixed top-0 right-0 m-14 text-5xl cursor-pointer hover:text-red-500 transition-colors"
+      />
+      <div className="max-w-lg w-full py-14 px-5 bg-white z-10">
+        <LoginCore
+          loginMode={popUpLoginMode}
+          setLoginMode={setPopUpLoginMode}
+        />
+      </div>
+    </div>
+  );
+};

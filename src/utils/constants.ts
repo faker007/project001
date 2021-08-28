@@ -6,6 +6,11 @@ export const routes = {
   twitter: "https://twitter.com/Wix",
   naver: "https://www.naver.com/",
   google: "https://www.google.com/",
+  campusDetail: (campus?: string): string => {
+    return Boolean(campus)
+      ? `/group/${campus}/discussion`
+      : `/group/:campus/discussion`;
+  },
 };
 
 export const CAMPUS_GROUPS: { enName: string; korName: string }[] = [

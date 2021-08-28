@@ -1,4 +1,4 @@
-import { strictEqual } from "assert";
+import { authService } from "./firebase";
 
 export const getMinimizedStr = (str: string): string => {
   let result = str;
@@ -7,4 +7,8 @@ export const getMinimizedStr = (str: string): string => {
     result += "...";
   }
   return result;
+};
+
+export const isLoggedIn = (): boolean => {
+  return Boolean(authService.currentUser?.uid);
 };

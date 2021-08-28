@@ -102,30 +102,30 @@ export const Header: React.FC<HeaderTypes> = ({
           />
           <span className="ml-5 text-2xl font-medium">캠퍼스 메이트</span>
         </Link>
-        <div className="w-1/3">
-          <ul className="w-full flex justify-between items-center">
-            <li>
+        <div className="w-1/2">
+          <ul className="w-full flex justify-end items-center">
+            <li className="mr-5">
               <Link to={routes.home}>메인</Link>
             </li>
-            <li>
+            <li className="mr-5">
               <Link to={routes.campus}>캠퍼스</Link>
             </li>
-            <li>
+            <li className="mr-5">
               <span className="cursor-pointer">메이트</span>
             </li>
-            <li>
+            <li className="mr-5">
               <Link to={routes.forum}>게시판</Link>
             </li>
-            <li>
+            <li className="mr-5">
               <span className="cursor-pointer">문의</span>
             </li>
-            <li>
+            <li className="mr-5">
               <FaceBookLogo />
             </li>
-            <li>
+            <li className="mr-5">
               <TwitterLogo />
             </li>
-            <li>
+            <li className="mr-5">
               <LinkLogo url={routes.naver} />
             </li>
             <li>
