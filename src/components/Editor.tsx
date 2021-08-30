@@ -1,6 +1,6 @@
 //@ts-ignore
 import ImageResize from "@looop/quill-image-resize-module-react";
-import { ChangeEvent, FormEvent, useMemo } from "react";
+import { useMemo } from "react";
 // @ts-ignore
 import ReactQuill, { Quill } from "react-quill";
 import { authService, storageService } from "../utils/firebase";
@@ -8,8 +8,6 @@ import { v4 as uuid } from "uuid";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 import { EditorTypes } from "../types/Editor.types";
 
 export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
@@ -131,8 +129,11 @@ export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
     }
   }, [stringedFile]);
 
-  console.log(value);
+  useEffect(() => {
+    quillRef.current?.getEditor().root.setAttribute("spellcheck", "false");
+  }, []);
 
+  console.log(value);
   return (
     <ReactQuill
       ref={quillRef}

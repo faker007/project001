@@ -592,6 +592,14 @@ video {
     Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
+.ql-snow {
+  border: none !important;
+}
+
+.ql-container {
+  font-size: 1rem !important;
+}
+
 .container {
   width: 100%;
 }

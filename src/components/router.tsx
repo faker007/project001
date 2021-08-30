@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import { Campus } from "../pages/Campus";
+import { CampusAbout } from "../pages/CampusAbout";
 import { CampusDetail } from "../pages/CampusDetail";
+import { CampusMedia } from "../pages/CampusMedia";
+import { CampusMembers } from "../pages/CampusMembers";
 import { Forum } from "../pages/Forum";
 import { Home } from "../pages/Home";
 import { UserObjTypes } from "../types/UserObj.types";
@@ -50,6 +53,15 @@ export const Router: React.FC = () => {
         </Route>
         <Route path={routes.campusDetail()}>
           <CampusDetail />
+        </Route>
+        <Route path={routes.campusMembers()}>
+          <CampusMembers />
+        </Route>
+        <Route path={routes.campusMedia()}>
+          <CampusMedia />
+        </Route>
+        <Route path={routes.campusAbout()}>
+          <CampusAbout />
         </Route>
         <Redirect to={routes.home}>
           <Home />

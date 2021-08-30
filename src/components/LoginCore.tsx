@@ -6,8 +6,9 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { DB_UserTypes } from "../types/DBService.types";
 import { LoginModeTypes } from "../types/LoginMode.types";
-import { authService } from "../utils/firebase";
+import { authService, dbService } from "../utils/firebase";
 
 export const LoginCore: React.FC<LoginModeTypes> = ({
   loginMode,
@@ -37,18 +38,29 @@ export const LoginCore: React.FC<LoginModeTypes> = ({
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log("submit!");
 
     if (email !== "" && password !== "") {
       try {
         if (signInMode) {
+          // 회원가입
           const userCredential =
             await authService.createUserWithEmailAndPassword(email, password);
+
           if (userCredential.user) {
+            // 해당 유저 데이터중 유의미한 데이터만 db에 저장
+            const dbUser: DB_UserTypes = {
+              displayName: userCredential.user.displayName,
+              email: userCredential.user.email,
+              uid: userCredential.user.uid,
+            };
+
+            await dbService.collection("user").add(dbUser);
+
             setLoginMode(false);
             toast.success("성공적으로 유저 생성 완료");
           }
         } else {
+          // 로그인
           const userCredential = await authService.signInWithEmailAndPassword(
             email,
             password
