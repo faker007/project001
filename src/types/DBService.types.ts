@@ -10,3 +10,11 @@ export interface DB_Group {
   participants?: string[];
   posts?: string[];
 }
+
+export interface DB_POST {
+  createdAt: number;
+  creatorId?: string;
+  body: string;
+  comments?: string[];
+  groupId?: string;
+}

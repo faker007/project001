@@ -1,26 +1,55 @@
-import {
-  faTimes,
-  faTimesCircle,
-  faUserCircle,
-} from "@fortawesome/free-solid-svg-icons";
+import { faTimesCircle, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
+import { useRef } from "react";
 import { useEffect } from "react";
+import { toast } from "react-toastify";
 import { CampusDetailPopupTypes } from "../types/CampusDetail.types";
-import { authService } from "../utils/firebase";
+import { DB_POST } from "../types/DBService.types";
+import { authService, dbService } from "../utils/firebase";
+import { findGroupId, isLoggedIn } from "../utils/utils";
 import { Editor } from "./Editor";
 
 export const CampusDetailPopup: React.FC<CampusDetailPopupTypes> = ({
   mode,
   setMode,
+  group,
 }) => {
   const [editorValue, setEditorValue] = useState("");
+  const submitBtnRef = useRef<any>();
+  const MIN_SUBMIT_LENGTH = 11;
+
+  const handleSubmitPost = async () => {
+    if (editorValue.length <= MIN_SUBMIT_LENGTH || !isLoggedIn()) {
+      return;
+    }
+
+    const post: DB_POST = {
+      body: editorValue,
+      createdAt: Date.now(),
+      creatorId: authService.currentUser?.uid,
+      comments: [],
+      groupId: await findGroupId(group),
+    };
+
+    console.log(post);
+
+    try {
+      await dbService.collection("post").add(post);
+      setMode(false);
+      toast.success("성공적으로 게시물을 게시했습니다.");
+    } catch (error) {
+      console.log(error);
+      toast.error(error);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, window.scrollY);
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
+      setEditorValue("");
     };
   }, []);
 
@@ -54,8 +83,18 @@ export const CampusDetailPopup: React.FC<CampusDetailPopupTypes> = ({
           <Editor value={editorValue} setValue={setEditorValue} />
         </section>
         <section className="w-full flex items-center justify-end p-5 mt-10">
-          <button className="px-14 py-2">취소</button>
-          <button className="px-14 py-2 bg-gray-500 text-white font-medium">
+          <button onClick={() => setMode(false)} className="px-14 py-2">
+            취소
+          </button>
+          <button
+            ref={submitBtnRef}
+            onClick={handleSubmitPost}
+            className={`px-14 py-2 ${
+              editorValue.length > MIN_SUBMIT_LENGTH
+                ? "bg-blue-500  cursor-pointer"
+                : "bg-gray-500 cursor-not-allowed "
+            } text-white font-medium hover:opacity-70 transition-opacity relative`}
+          >
             게시
           </button>
         </section>

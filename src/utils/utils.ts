@@ -26,3 +26,21 @@ export const initGroups = async () => {
     await dbService.collection("group").add(dbGroup);
   }
 };
+
+export const findGroupId = async (group: string): Promise<string> => {
+  let result = "";
+  try {
+    const query = dbService.collection("group").where("enName", "==", group);
+    const queryResult = await query.get();
+
+    for (const doc of queryResult.docs) {
+      if (doc.id) {
+        result = doc.id;
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+  return result;
+};

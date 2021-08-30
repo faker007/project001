@@ -133,7 +133,6 @@ export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
     quillRef.current?.getEditor().root.setAttribute("spellcheck", "false");
   }, []);
 
-  console.log(value);
   return (
     <ReactQuill
       ref={quillRef}
@@ -142,6 +141,7 @@ export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
       onChange={setValue}
       modules={modules}
       formats={formats}
+      placeholder={"공유할 내용을 입력해 주세요. (최소 11자 이상)"}
     />
   );
 };

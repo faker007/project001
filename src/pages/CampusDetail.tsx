@@ -9,16 +9,20 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { CampusDetailPopup } from "../components/CampusDetailPopup";
+import { CampusDetailPost } from "../components/CampusDetailPost";
 import { CampusHeader } from "../components/CampusHeader";
 import { CampusDetailUseParamsTypes } from "../types/CampusDetail.types";
 import { CampusTab } from "../types/CampusHeader.types";
+import { DB_POST } from "../types/DBService.types";
 import { dbService } from "../utils/firebase";
+import { findGroupId } from "../utils/utils";
 
 export const CampusDetail: React.FC = () => {
   const { campus } = useParams<CampusDetailUseParamsTypes>();
   const [groupIns, setGroupIns] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [writeMode, setWriteMode] = useState(false);
+  const [posts, setPosts] = useState<DB_POST[]>([]);
 
   const loadGroupIns = async () => {
     const query = dbService.collection("group").where("enName", "==", campus);
@@ -27,16 +31,35 @@ export const CampusDetail: React.FC = () => {
     for (const group of queryResult.docs) {
       setGroupIns(group.data());
     }
+  };
 
+  const loadPosts = async () => {
+    const groupId = await findGroupId(campus);
+    const query = dbService.collection("post").where("groupId", "==", groupId);
+    const queryResult = await query.get();
+    const arr: DB_POST[] = [];
+
+    for (const doc of queryResult.docs) {
+      const data: DB_POST = {
+        body: doc.data().body,
+        createdAt: doc.data().createdAt,
+        creatorId: doc.data().creatorId,
+        comments: doc.data().comments,
+        groupId: doc.data().groupId,
+      };
+
+      arr.push(data);
+    }
+
+    setPosts(arr);
     setLoading(false);
   };
 
   useEffect(() => {
     setLoading(true);
     loadGroupIns();
+    loadPosts();
   }, []);
-
-  console.log(groupIns);
 
   return (
     <div className="max-w-screen-lg mx-auto pb-20">
@@ -73,6 +96,13 @@ export const CampusDetail: React.FC = () => {
                   <FontAwesomeIcon className="text-lg" icon={faVideo} />
                 </div>
               </section>
+              {/* posts */}
+              <section className="mt-5">
+                {posts.length > 0 &&
+                  posts.map((elem, index) => (
+                    <CampusDetailPost key={index} {...elem} />
+                  ))}
+              </section>
             </div>
             <div className="w-1/3">
               <section className="p-5  border border-black">
@@ -88,7 +118,11 @@ export const CampusDetail: React.FC = () => {
             </div>
           </main>
           {writeMode && (
-            <CampusDetailPopup mode={writeMode} setMode={setWriteMode} />
+            <CampusDetailPopup
+              group={campus}
+              mode={writeMode}
+              setMode={setWriteMode}
+            />
           )}
         </>
       )}
