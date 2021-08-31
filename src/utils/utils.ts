@@ -1,4 +1,4 @@
-import { DB_Group } from "../types/DBService.types";
+import { DB_Group, DB_UserTypes } from "../types/DBService.types";
 import { CAMPUS_GROUPS } from "./constants";
 import { authService, dbService } from "./firebase";
 
@@ -43,4 +43,26 @@ export const findGroupId = async (group: string): Promise<string> => {
   }
 
   return result;
+};
+
+export const getUserFromUid = async (
+  uid: string
+): Promise<DB_UserTypes | null> => {
+  try {
+    const query = dbService.collection("user").where("uid", "==", uid);
+    const queryResult = await query.get();
+
+    for (const doc of queryResult.docs) {
+      const data = doc.data();
+      return {
+        displayName: data.displayName,
+        email: data.email,
+        uid: data.uid,
+      };
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+  return null;
 };

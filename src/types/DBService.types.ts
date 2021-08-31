@@ -12,9 +12,19 @@ export interface DB_Group {
 }
 
 export interface DB_POST {
+  id: string;
   createdAt: number;
   creatorId?: string;
   body: string;
   comments?: string[];
   groupId?: string;
+}
+
+export interface DB_COMMENT {
+  id: string;
+  postID: string;
+  createdAt: number;
+  body: string;
+  replyComments: string[];
+  creatorId: string;
 }

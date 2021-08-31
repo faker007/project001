@@ -11,11 +11,12 @@ import { useParams } from "react-router-dom";
 import { CampusDetailPopup } from "../components/CampusDetailPopup";
 import { CampusDetailPost } from "../components/CampusDetailPost";
 import { CampusHeader } from "../components/CampusHeader";
+import { PopUpLogin } from "../components/PopUpLogin";
 import { CampusDetailUseParamsTypes } from "../types/CampusDetail.types";
 import { CampusTab } from "../types/CampusHeader.types";
 import { DB_POST } from "../types/DBService.types";
 import { dbService } from "../utils/firebase";
-import { findGroupId } from "../utils/utils";
+import { findGroupId, isLoggedIn } from "../utils/utils";
 
 export const CampusDetail: React.FC = () => {
   const { campus } = useParams<CampusDetailUseParamsTypes>();
@@ -23,6 +24,8 @@ export const CampusDetail: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [writeMode, setWriteMode] = useState(false);
   const [posts, setPosts] = useState<DB_POST[]>([]);
+  const [loginMode, setLoginMode] = useState(false);
+  const [groupId, setGroupId] = useState<string>("");
 
   const loadGroupIns = async () => {
     const query = dbService.collection("group").where("enName", "==", campus);
@@ -46,6 +49,7 @@ export const CampusDetail: React.FC = () => {
         creatorId: doc.data().creatorId,
         comments: doc.data().comments,
         groupId: doc.data().groupId,
+        id: doc.data().id,
       };
 
       arr.push(data);
@@ -55,11 +59,31 @@ export const CampusDetail: React.FC = () => {
     setLoading(false);
   };
 
+  const handleWriteModeOpen = () => {
+    if (!isLoggedIn()) {
+      setWriteMode(false);
+      setLoginMode(true);
+    } else {
+      setLoginMode(false);
+      setWriteMode(true);
+    }
+  };
+
+  const loadGroupId = async () => {
+    const groupId = await findGroupId(campus);
+    if (groupId) {
+      setGroupId(groupId);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
+    loadGroupId();
     loadGroupIns();
     loadPosts();
   }, []);
+
+  console.log(posts);
 
   return (
     <div className="max-w-screen-lg mx-auto pb-20">
@@ -82,7 +106,7 @@ export const CampusDetail: React.FC = () => {
               {/* writePopup */}
               <section
                 className="w-full  border border-black p-5 flex items-center justify-between cursor-pointer"
-                onClick={() => setWriteMode(true)}
+                onClick={handleWriteModeOpen}
               >
                 <div className="flex items-center">
                   <FontAwesomeIcon
@@ -99,9 +123,18 @@ export const CampusDetail: React.FC = () => {
               {/* posts */}
               <section className="mt-5">
                 {posts.length > 0 &&
-                  posts.map((elem, index) => (
-                    <CampusDetailPost key={index} {...elem} />
-                  ))}
+                  posts
+                    .sort((a, b) => b.createdAt - a.createdAt)
+                    .map((elem, index) => (
+                      <CampusDetailPost
+                        key={index}
+                        post={elem}
+                        loginMode={loginMode}
+                        setLoginMode={setLoginMode}
+                        setPosts={setPosts}
+                        posts={posts}
+                      />
+                    ))}
               </section>
             </div>
             <div className="w-1/3">
@@ -119,9 +152,18 @@ export const CampusDetail: React.FC = () => {
           </main>
           {writeMode && (
             <CampusDetailPopup
+              posts={posts}
+              setPosts={setPosts}
               group={campus}
               mode={writeMode}
               setMode={setWriteMode}
+              groupId={groupId}
+            />
+          )}
+          {loginMode && (
+            <PopUpLogin
+              setPopUpLoginMode={setLoginMode}
+              popUpLoginMode={loginMode}
             />
           )}
         </>

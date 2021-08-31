@@ -9,11 +9,15 @@ import { DB_POST } from "../types/DBService.types";
 import { authService, dbService } from "../utils/firebase";
 import { findGroupId, isLoggedIn } from "../utils/utils";
 import { Editor } from "./Editor";
+import { v4 as uuid } from "uuid";
 
 export const CampusDetailPopup: React.FC<CampusDetailPopupTypes> = ({
   mode,
   setMode,
   group,
+  posts,
+  setPosts,
+  groupId,
 }) => {
   const [editorValue, setEditorValue] = useState("");
   const submitBtnRef = useRef<any>();
@@ -30,13 +34,23 @@ export const CampusDetailPopup: React.FC<CampusDetailPopupTypes> = ({
       creatorId: authService.currentUser?.uid,
       comments: [],
       groupId: await findGroupId(group),
+      id: uuid(),
     };
-
-    console.log(post);
 
     try {
       await dbService.collection("post").add(post);
+
+      const groupRef = await dbService.doc(`group/${groupId}`).get();
+
+      if (groupRef.exists) {
+        const postsRef = groupRef.data()?.posts || [];
+        await dbService.doc(`group/${groupId}`).update({
+          posts: [...postsRef, post.id],
+        });
+      }
+
       setMode(false);
+      setPosts((prev) => [...prev, post]);
       toast.success("성공적으로 게시물을 게시했습니다.");
     } catch (error) {
       console.log(error);
