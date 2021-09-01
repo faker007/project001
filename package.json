@@ -17,6 +17,7 @@
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "firebase": "^8.10.0",
+    "moment": "^2.29.1",
     "quill-image-resize-module": "^3.0.0",
     "quill-image-resize-module-react": "^3.0.0",
     "quill-video-resize": "^1.0.0",

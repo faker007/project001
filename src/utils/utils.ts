@@ -1,3 +1,4 @@
+import moment from "moment";
 import { DB_Group, DB_UserTypes } from "../types/DBService.types";
 import { CAMPUS_GROUPS } from "./constants";
 import { authService, dbService } from "./firebase";
@@ -65,4 +66,27 @@ export const getUserFromUid = async (
   }
 
   return null;
+};
+
+export const timeCalc = (time: number): string => {
+  let result = "";
+
+  const date = new Date(time);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+
+  const phrase = `${year}${month < 10 ? `0${month}` : month}${
+    day < 10 ? `0${day}` : day
+  } ${hours < 10 ? `0${hours}` : hours}${
+    minutes < 10 ? `0${minutes}` : minutes
+  }`;
+
+  console.log(phrase);
+
+  result = moment(phrase, "YYYYMMDD HHmm").fromNow();
+
+  return result;
 };

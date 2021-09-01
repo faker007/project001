@@ -26,6 +26,7 @@ export const CampusDetail: React.FC = () => {
   const [posts, setPosts] = useState<DB_POST[]>([]);
   const [loginMode, setLoginMode] = useState(false);
   const [groupId, setGroupId] = useState<string>("");
+  const [refetchPost, setRefetchPost] = useState(false);
 
   const loadGroupIns = async () => {
     const query = dbService.collection("group").where("enName", "==", campus);
@@ -55,7 +56,9 @@ export const CampusDetail: React.FC = () => {
       arr.push(data);
     }
 
+    arr.sort((a, b) => b.createdAt - a.createdAt);
     setPosts(arr);
+    setRefetchPost(false);
     setLoading(false);
   };
 
@@ -83,7 +86,12 @@ export const CampusDetail: React.FC = () => {
     loadPosts();
   }, []);
 
-  console.log(posts);
+  useEffect(() => {
+    if (refetchPost) {
+      setLoading(true);
+      loadPosts();
+    }
+  }, [refetchPost]);
 
   return (
     <div className="max-w-screen-lg mx-auto pb-20">
@@ -123,18 +131,16 @@ export const CampusDetail: React.FC = () => {
               {/* posts */}
               <section className="mt-5">
                 {posts.length > 0 &&
-                  posts
-                    .sort((a, b) => b.createdAt - a.createdAt)
-                    .map((elem, index) => (
-                      <CampusDetailPost
-                        key={index}
-                        post={elem}
-                        loginMode={loginMode}
-                        setLoginMode={setLoginMode}
-                        setPosts={setPosts}
-                        posts={posts}
-                      />
-                    ))}
+                  posts.map((elem, index) => (
+                    <CampusDetailPost
+                      key={index}
+                      post={elem}
+                      loginMode={loginMode}
+                      setLoginMode={setLoginMode}
+                      refetch={refetchPost}
+                      setRefetch={setRefetchPost}
+                    />
+                  ))}
               </section>
             </div>
             <div className="w-1/3">
@@ -152,8 +158,8 @@ export const CampusDetail: React.FC = () => {
           </main>
           {writeMode && (
             <CampusDetailPopup
-              posts={posts}
-              setPosts={setPosts}
+              refetch={refetchPost}
+              setRefetch={setRefetchPost}
               group={campus}
               mode={writeMode}
               setMode={setWriteMode}

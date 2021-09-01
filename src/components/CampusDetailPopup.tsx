@@ -15,8 +15,8 @@ export const CampusDetailPopup: React.FC<CampusDetailPopupTypes> = ({
   mode,
   setMode,
   group,
-  posts,
-  setPosts,
+  refetch,
+  setRefetch,
   groupId,
 }) => {
   const [editorValue, setEditorValue] = useState("");
@@ -49,8 +49,8 @@ export const CampusDetailPopup: React.FC<CampusDetailPopupTypes> = ({
         });
       }
 
+      setRefetch(true);
       setMode(false);
-      setPosts((prev) => [...prev, post]);
       toast.success("성공적으로 게시물을 게시했습니다.");
     } catch (error) {
       console.log(error);
@@ -59,7 +59,6 @@ export const CampusDetailPopup: React.FC<CampusDetailPopupTypes> = ({
   };
 
   useEffect(() => {
-    window.scrollTo(0, window.scrollY);
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";

@@ -17,7 +17,6 @@ export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
 
   const imageHandler = () => {
     // 파일을 업로드 하기 위한 input 태그 생성
-    console.log("Image Handler!");
     const input = document.createElement("input");
 
     input.setAttribute("type", "file");
@@ -120,6 +119,8 @@ export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setStringedFile("");
     }
   };
 

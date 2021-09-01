@@ -11,7 +11,7 @@ import { useState } from "react";
 import { CampusDetailPostTypes } from "../types/CampusDetail.types";
 import { DB_COMMENT, DB_UserTypes } from "../types/DBService.types";
 import { authService, dbService } from "../utils/firebase";
-import { getUserFromUid, isLoggedIn } from "../utils/utils";
+import { getUserFromUid, isLoggedIn, timeCalc } from "../utils/utils";
 import { Editor } from "./Editor";
 import { v4 as uuid } from "uuid";
 import { CampusDetailComment } from "./CampusDetailComment";
@@ -21,8 +21,8 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
   post: { groupId, comments: commentIds, createdAt, body, creatorId, id },
   loginMode,
   setLoginMode,
-  posts,
-  setPosts,
+  refetch,
+  setRefetch,
 }) => {
   const [creator, setCreator] = useState<DB_UserTypes>({
     displayName: null,
@@ -34,9 +34,13 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
   const [editorValue, setEditorValue] = useState("");
   const [comments, setComments] = useState<DB_COMMENT[]>([]);
   const [postMenuMode, setPostMenuMode] = useState(false);
+  const [refetchComments, setRefetchComments] = useState(false);
 
   const handleCommentSubmit = async () => {
     if (editorValue.length <= 11 || !isLoggedIn()) {
+      toast.error("최소 11자 이상 입력해야 합니다.", {
+        position: "top-center",
+      });
       return;
     }
 
@@ -65,8 +69,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
 
       await dbService.collection("comment").add(comment);
 
-      setComments((prev) => [...prev, comment]);
-
+      setRefetchComments(true);
       setEditorMode(false);
       setEditorValue("");
     } catch (error) {
@@ -113,8 +116,10 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
     } catch (error) {
       console.log(error);
     } finally {
-      setComments(arr);
+      arr.sort((a, b) => b.createdAt - a.createdAt);
+      setComments([...arr]);
       setLoading(false);
+      setRefetchComments(false);
     }
   };
 
@@ -150,7 +155,9 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
     console.log("Delete this post!");
 
     if (creator.uid !== authService.currentUser?.uid) {
-      alert("해당 게시글을 삭제할 권한이 없습니다.");
+      toast.error("해당 게시글을 삭제할 권한이 없습니다.", {
+        position: "top-center",
+      });
       return;
     }
 
@@ -172,12 +179,10 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
 
       await deletePostFromGroup();
 
-      const leftPosts = posts.filter((elem) => elem.id !== id);
-      setPosts(leftPosts);
-      setComments([]);
+      setRefetch(true);
     } catch (error) {
       console.log(error);
-      toast.error(error);
+      toast.error(error, { position: "top-center" });
     }
   };
 
@@ -195,6 +200,13 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
       document.body.onclick = null;
     }
   }, [postMenuMode]);
+
+  useEffect(() => {
+    if (refetchComments) {
+      setLoading(true);
+      loadComments();
+    }
+  }, [refetchComments]);
 
   return (
     <div className="w-full p-5 pb-0 my-5 border border-black">
@@ -215,7 +227,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
               />
               <div className="ml-3">
                 <h1 className="font-medium text-lg">{creator.email}</h1>
-                <h2 className="text-sm">{createdAt}</h2>
+                <h2 className="text-sm">{timeCalc(createdAt)}</h2>
               </div>
             </section>
             <section className="relative">
@@ -312,15 +324,15 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
               </div>
             </section>
             <section className="mt-5">
-              {comments
-                .sort((a, b) => b.createdAt - a.createdAt)
-                .map((elem, index) => (
-                  <CampusDetailComment
-                    comment={elem}
-                    key={index}
-                    isLast={index === comments.length - 1}
-                  />
-                ))}
+              {comments.map((elem, index) => (
+                <CampusDetailComment
+                  comment={elem}
+                  key={index}
+                  isLast={index === comments.length - 1}
+                  refetch={refetchComments}
+                  setRefetch={setRefetchComments}
+                />
+              ))}
             </section>
           </footer>
         </>
