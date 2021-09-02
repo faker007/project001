@@ -22,7 +22,103 @@ export const routes = {
   campusAbout: (campus?: string): string => {
     return Boolean(campus) ? `/group/${campus}/about` : `/group/:campus/about`;
   },
+  forumDetail: (forum?: string): string => {
+    return Boolean(forum) ? `/forum/${forum}` : `/forum/:forumGroup`;
+  },
+  forumCreatePost: (forum?: string): string => {
+    return Boolean(forum)
+      ? `/forum/${forum}/create-post`
+      : `/forum/:forum/create-post`;
+  },
+  forumCreateQuestion: (forum?: string): string => {
+    return Boolean(forum)
+      ? `/forum/${forum}/create-question`
+      : `/forum/:forum/create-question`;
+  },
 };
+
+export const FORUM_GROUPS: { enName: string; korName: string }[] = [
+  {
+    enName: "jayugesipan",
+    korName: "자유게시판",
+  },
+  {
+    enName: "jayugesipan",
+    korName: "자유게시판",
+  },
+  {
+    enName: "mentoring-cunceon",
+    korName: "멘토링 (춘천)",
+  },
+  {
+    enName: "gwating-cunceon",
+    korName: "과팅 (춘천)",
+  },
+  {
+    enName: "miting-cunceon",
+    korName: "미팅 (춘천)",
+  },
+  {
+    enName: "somoim-cunceon",
+    korName: "소모임 (춘천)",
+  },
+  {
+    enName: "dongari-cunceon",
+    korName: "동아리 (춘천)",
+  },
+  {
+    enName: "seuteodi-cunceon",
+    korName: "스터디 (춘천)",
+  },
+  {
+    enName: "mentoring-samceog",
+    korName: "멘토링 (삼척)",
+  },
+  {
+    enName: "gwating-samceog",
+    korName: "과팅 (삼척)",
+  },
+  {
+    enName: "miting-samceog",
+    korName: "미팅 (삼척)",
+  },
+  {
+    enName: "somoim-samceog",
+    korName: "소모임 (삼척)",
+  },
+  {
+    enName: "dongari-samceog",
+    korName: "동아리 (삼척)",
+  },
+  {
+    enName: "seuteodi-samceog",
+    korName: "스터디 (삼척)",
+  },
+  {
+    enName: "mentoring-dogye",
+    korName: "멘토링 (도계)",
+  },
+  {
+    enName: "gwating-dogye",
+    korName: "과팅 (도계)",
+  },
+  {
+    enName: "miting-dogye",
+    korName: "미팅 (도계)",
+  },
+  {
+    enName: "somoim-dogye",
+    korName: "소모임 (도계)",
+  },
+  {
+    enName: "dongari-dogye",
+    korName: "동아리 (도계)",
+  },
+  {
+    enName: "seuteodi-dogye",
+    korName: "스터디 (도계)",
+  },
+];
 
 export const CAMPUS_GROUPS: { enName: string; korName: string }[] = [
   {

@@ -8,6 +8,8 @@ import { CampusDetail } from "../pages/CampusDetail";
 import { CampusMedia } from "../pages/CampusMedia";
 import { CampusMembers } from "../pages/CampusMembers";
 import { Forum } from "../pages/Forum";
+import { ForumCreatePost } from "../pages/ForumCreatePost";
+import { ForumDetail } from "../pages/ForumDetail";
 import { Home } from "../pages/Home";
 import { UserObjTypes } from "../types/UserObj.types";
 import { routes } from "../utils/constants";
@@ -48,7 +50,7 @@ export const Router: React.FC = () => {
         <Route path={routes.campus}>
           <Campus />
         </Route>
-        <Route path={routes.forum}>
+        <Route path={routes.forum} exact>
           <Forum />
         </Route>
         <Route path={routes.campusDetail()}>
@@ -62,6 +64,15 @@ export const Router: React.FC = () => {
         </Route>
         <Route path={routes.campusAbout()}>
           <CampusAbout />
+        </Route>
+        <Route path={routes.forumDetail()} exact>
+          <ForumDetail />
+        </Route>
+        <Route path={routes.forumCreatePost()} exact>
+          <ForumCreatePost />
+        </Route>
+        <Route path={routes.forumCreateQuestion()} exact>
+          <ForumCreatePost />
         </Route>
         <Redirect to={routes.home}>
           <Home />
