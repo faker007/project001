@@ -18,6 +18,7 @@ export interface DB_POST {
   body: string;
   comments?: string[];
   groupId?: string;
+  imgUrlList: string[];
 }
 
 export interface DB_COMMENT {
@@ -27,4 +28,5 @@ export interface DB_COMMENT {
   body: string;
   replyComments: string[];
   creatorId: string;
+  imgUrlList: string[];
 }

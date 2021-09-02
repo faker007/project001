@@ -10,7 +10,12 @@ import { useEffect } from "react";
 import { useRef } from "react";
 import { EditorTypes } from "../types/Editor.types";
 
-export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
+export const Editor: React.FC<EditorTypes> = ({
+  setValue,
+  value,
+  imgUrlList,
+  setImgUrlList,
+}) => {
   Quill.register("modules/imageResize", ImageResize);
   const [stringedFile, setStringedFile] = useState("");
   const quillRef = useRef<ReactQuill>(null);
@@ -105,6 +110,7 @@ export const Editor: React.FC<EditorTypes> = ({ setValue, value }) => {
       );
       const downloadURL = await uploadTask.ref.getDownloadURL();
       if (downloadURL !== "") {
+        setImgUrlList((prev) => [...prev, downloadURL]);
         const range = quillRef.current?.getEditor().getSelection()?.index;
 
         if (range !== undefined && range !== null) {

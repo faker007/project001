@@ -11,7 +11,12 @@ import { useState } from "react";
 import { CampusDetailPostTypes } from "../types/CampusDetail.types";
 import { DB_COMMENT, DB_UserTypes } from "../types/DBService.types";
 import { authService, dbService } from "../utils/firebase";
-import { getUserFromUid, isLoggedIn, timeCalc } from "../utils/utils";
+import {
+  deleteImgFromFirebase,
+  getUserFromUid,
+  isLoggedIn,
+  timeCalc,
+} from "../utils/utils";
 import { Editor } from "./Editor";
 import { v4 as uuid } from "uuid";
 import { CampusDetailComment } from "./CampusDetailComment";
@@ -35,12 +40,11 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
   const [comments, setComments] = useState<DB_COMMENT[]>([]);
   const [postMenuMode, setPostMenuMode] = useState(false);
   const [refetchComments, setRefetchComments] = useState(false);
+  const [commentImgUrlList, setCommentImgUrlList] = useState<string[]>([]);
 
   const handleCommentSubmit = async () => {
     if (editorValue.length <= 11 || !isLoggedIn()) {
-      toast.error("최소 11자 이상 입력해야 합니다.", {
-        position: "top-center",
-      });
+      toast.error("최소 11자 이상 입력해야 합니다.");
       return;
     }
 
@@ -51,6 +55,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
       id: uuid(),
       replyComments: [],
       creatorId: authService.currentUser ? authService.currentUser.uid : "",
+      imgUrlList: commentImgUrlList,
     };
 
     try {
@@ -70,6 +75,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
       await dbService.collection("comment").add(comment);
 
       setRefetchComments(true);
+      setCommentImgUrlList([]);
       setEditorMode(false);
       setEditorValue("");
     } catch (error) {
@@ -110,6 +116,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
           id: doc.data().id,
           postID: doc.data().postID,
           replyComments: doc.data().replyComments,
+          imgUrlList: doc.data().imgUrlList,
         };
         arr.push(data);
       }
@@ -146,6 +153,12 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
 
     for (const doc of queryResult.docs) {
       if (doc.exists) {
+        if (doc.data().imgUrlList) {
+          for (const url of doc.data().imgUrlList) {
+            await deleteImgFromFirebase(url);
+          }
+        }
+
         await dbService.doc(`comment/${doc.id}`).delete();
       }
     }
@@ -155,9 +168,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
     console.log("Delete this post!");
 
     if (creator.uid !== authService.currentUser?.uid) {
-      toast.error("해당 게시글을 삭제할 권한이 없습니다.", {
-        position: "top-center",
-      });
+      toast.error("해당 게시글을 삭제할 권한이 없습니다.");
       return;
     }
 
@@ -167,13 +178,19 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
 
       for (const doc of queryResult.docs) {
         if (doc.exists) {
-          await dbService.doc(`post/${doc.id}`).delete();
-
           if (doc.data().comments) {
             for (const commentId of doc.data().comments) {
               await deleteCommentFromPost(commentId);
             }
           }
+
+          if (doc.data().imgUrlList) {
+            for (const url of doc.data().imgUrlList) {
+              await deleteImgFromFirebase(url);
+            }
+          }
+
+          await dbService.doc(`post/${doc.id}`).delete();
         }
       }
 
@@ -182,11 +199,25 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
       setRefetch(true);
     } catch (error) {
       console.log(error);
-      toast.error(error, { position: "top-center" });
+      toast.error(error);
     }
   };
 
   const handleClickToExitMenu = () => setPostMenuMode(false);
+
+  const handleClickToCancel = async () => {
+    try {
+      if (commentImgUrlList.length > 0) {
+        for (const url of commentImgUrlList) {
+          await deleteImgFromFirebase(url);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setEditorMode(false);
+    setEditorValue("");
+  };
 
   useEffect(() => {
     loadCreator();
@@ -258,7 +289,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
             className="my-5"
             dangerouslySetInnerHTML={{ __html: body }}
           ></main>
-          <aside className="w-full flex items-center justify-between">
+          <aside className="w-full flex items-center justify-between pb-10 border-b border-gray-300">
             <section className="flex items-center">
               <div className="p-1 px-3 border border-gray-500 rounded-sm hover:opacity-70 transition-opacity mr-3">
                 <FontAwesomeIcon icon={faThumbsUp} className="mr-2" />
@@ -270,7 +301,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
               </div>
             </section>
             <section>
-              댓글 <span className="font-medium">{commentIds?.length}</span>개
+              댓글 <span className="font-medium">{comments.length}</span>개
             </section>
           </aside>
           {/* comments should be here */}
@@ -290,13 +321,15 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
               <div style={{ width: "90%" }} className="border border-gray-500">
                 {editorMode ? (
                   <>
-                    <Editor value={editorValue} setValue={setEditorValue} />
+                    <Editor
+                      value={editorValue}
+                      setValue={setEditorValue}
+                      imgUrlList={commentImgUrlList}
+                      setImgUrlList={setCommentImgUrlList}
+                    />
                     <div className="w-full flex items-center justify-end p-5">
                       <button
-                        onClick={() => {
-                          setEditorMode(false);
-                          setEditorValue("");
-                        }}
+                        onClick={handleClickToCancel}
                         className="mr-5 px-5 py-2"
                       >
                         취소

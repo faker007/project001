@@ -11,7 +11,12 @@ import { toast } from "react-toastify";
 import { CampusDetailCommentTypes } from "../types/CampusDetail.types";
 import { DB_UserTypes } from "../types/DBService.types";
 import { authService, dbService } from "../utils/firebase";
-import { getUserFromUid, isLoggedIn } from "../utils/utils";
+import {
+  deleteImgFromFirebase,
+  getUserFromUid,
+  isLoggedIn,
+  timeCalc,
+} from "../utils/utils";
 
 export const CampusDetailComment: React.FC<CampusDetailCommentTypes> = ({
   comment: { postID, replyComments, createdAt, body, creatorId, id },
@@ -66,9 +71,7 @@ export const CampusDetailComment: React.FC<CampusDetailCommentTypes> = ({
     }
 
     if (authService.currentUser?.uid !== creatorId) {
-      toast.error("해당 댓글을 지울 권한이 없습니다.", {
-        position: "top-center",
-      });
+      toast.error("해당 댓글을 지울 권한이 없습니다.");
       return;
     }
     try {
@@ -77,8 +80,15 @@ export const CampusDetailComment: React.FC<CampusDetailCommentTypes> = ({
 
       for (const doc of queryResult.docs) {
         if (doc.exists) {
-          await dbService.doc(`comment/${doc.id}`).delete();
           await deleteCommentIdFromPost();
+
+          if (doc.data().imgUrlList) {
+            for (const url of doc.data().imgUrlList) {
+              await deleteImgFromFirebase(url);
+            }
+          }
+
+          await dbService.doc(`comment/${doc.id}`).delete();
           setRefetch(true);
         }
       }
@@ -128,7 +138,7 @@ export const CampusDetailComment: React.FC<CampusDetailCommentTypes> = ({
             <section className="w-full  flex items-center justify-between">
               <div>
                 <h1 className="font-medium">{creator?.email}</h1>
-                <h2 className="text-sm">{createdAt}</h2>
+                <h2 className="text-sm">{timeCalc(createdAt)}</h2>
               </div>
               <div className="relative">
                 <FontAwesomeIcon

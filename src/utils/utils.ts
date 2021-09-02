@@ -1,7 +1,7 @@
 import moment from "moment";
 import { DB_Group, DB_UserTypes } from "../types/DBService.types";
 import { CAMPUS_GROUPS } from "./constants";
-import { authService, dbService } from "./firebase";
+import { authService, dbService, storageService } from "./firebase";
 
 export const getMinimizedStr = (str: string): string => {
   let result = str;
@@ -84,9 +84,19 @@ export const timeCalc = (time: number): string => {
     minutes < 10 ? `0${minutes}` : minutes
   }`;
 
-  console.log(phrase);
-
   result = moment(phrase, "YYYYMMDD HHmm").fromNow();
 
   return result;
+};
+
+export const deleteImgFromFirebase = async (imgUrl: string) => {
+  try {
+    const imgRef = storageService.refFromURL(imgUrl);
+    console.log(imgRef);
+    if (imgRef) {
+      await imgRef.delete();
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };
