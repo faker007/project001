@@ -28,12 +28,17 @@ export const routes = {
   forumCreatePost: (forum?: string): string => {
     return Boolean(forum)
       ? `/forum/${forum}/create-post`
-      : `/forum/:forum/create-post`;
+      : `/forum/:forumGroup/create-post`;
   },
   forumCreateQuestion: (forum?: string): string => {
     return Boolean(forum)
       ? `/forum/${forum}/create-question`
-      : `/forum/:forum/create-question`;
+      : `/forum/:forumGroup/create-question`;
+  },
+  forumPostDetail: (forum?: string, id?: string): string => {
+    return Boolean(id) && Boolean(forum)
+      ? `/forum/${forum}/${id}`
+      : `/forum/:forumGroup/:postId`;
   },
 };
 

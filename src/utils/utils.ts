@@ -1,5 +1,6 @@
 import moment from "moment";
 import { DB_Group, DB_UserTypes } from "../types/DBService.types";
+import { ForumGroupTypes } from "../types/Forum.types";
 import { CAMPUS_GROUPS } from "./constants";
 import { authService, dbService, storageService } from "./firebase";
 
@@ -119,4 +120,31 @@ export const deleteImgFromFirebase = async (imgUrl: string) => {
   } catch (error) {
     console.log(error);
   }
+};
+
+export const loadGroupIns = async (
+  forumGroup: string
+): Promise<ForumGroupTypes | null> => {
+  try {
+    const query = dbService
+      .collection("forumGroup")
+      .where("enName", "==", forumGroup);
+    const result = await query.get();
+
+    for (const doc of result.docs) {
+      if (doc.exists) {
+        return {
+          enName: doc.data().enName,
+          korName: doc.data().korName,
+          participants: doc.data().participants,
+          posts: doc.data().posts,
+          views: doc.data().views,
+        };
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+  return null;
 };

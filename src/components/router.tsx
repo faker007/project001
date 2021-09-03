@@ -1,4 +1,3 @@
-import React from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
@@ -10,6 +9,7 @@ import { CampusMembers } from "../pages/CampusMembers";
 import { Forum } from "../pages/Forum";
 import { ForumCreatePost } from "../pages/ForumCreatePost";
 import { ForumDetail } from "../pages/ForumDetail";
+import { ForumPostDetail } from "../pages/ForumPostDetail";
 import { Home } from "../pages/Home";
 import { UserObjTypes } from "../types/UserObj.types";
 import { routes } from "../utils/constants";
@@ -73,6 +73,9 @@ export const Router: React.FC = () => {
         </Route>
         <Route path={routes.forumCreateQuestion()} exact>
           <ForumCreatePost />
+        </Route>
+        <Route path={routes.forumPostDetail()} exact>
+          <ForumPostDetail />
         </Route>
         <Redirect to={routes.home}>
           <Home />

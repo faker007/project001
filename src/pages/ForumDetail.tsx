@@ -1,9 +1,13 @@
 import {
   faCommentAlt,
+  faEye,
+  faHeart,
   faQuestionCircle,
 } from "@fortawesome/free-regular-svg-icons";
 import {
+  faChevronDown,
   faChevronRight,
+  faChevronUp,
   faCircleNotch,
   faEllipsisV,
   faSearch,
@@ -12,16 +16,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ForumDetailPost } from "../components/ForumDetailPost";
 import { ForumGroupTypes, ForumPostTypes } from "../types/Forum.types";
 import { routes } from "../utils/constants";
 import { dbService } from "../utils/firebase";
-import { findForumGroupId } from "../utils/utils";
+import { findForumGroupId, loadGroupIns } from "../utils/utils";
 
 export const ForumDetail: React.FC = () => {
   const { forumGroup } = useParams<{ forumGroup: string }>();
   const [posts, setPosts] = useState<ForumPostTypes[]>([]);
-  const [group, setGroup] = useState<ForumGroupTypes>();
+  const [group, setGroup] = useState<ForumGroupTypes | null>(null);
   const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(true);
 
   const loadForumGroupPosts = async () => {
     if (group) {
@@ -43,11 +49,15 @@ export const ForumDetail: React.FC = () => {
               forumGroupId: doc.data().forumGroupId,
               id: doc.data().id,
               views: doc.data().views,
+              title: doc.data().title,
             };
 
             arr.push(elem);
           }
         }
+        arr.sort((a, b) => b.createdAt - a.createdAt);
+
+        console.log(`arr: `, arr);
 
         setPosts([...arr]);
       } catch (error) {
@@ -57,34 +67,33 @@ export const ForumDetail: React.FC = () => {
 
     setLoading(false);
   };
-  const loadGroupIns = async () => {
-    try {
-      const query = dbService
-        .collection("forumGroup")
-        .where("enName", "==", forumGroup);
-      const result = await query.get();
 
-      for (const doc of result.docs) {
-        if (doc.exists) {
-          setGroup({
-            enName: doc.data().enName,
-            korName: doc.data().korName,
-            participants: doc.data().participants,
-            posts: doc.data().posts,
-            views: doc.data().views,
-          });
-        }
-      }
-    } catch (error) {
-      console.log(error);
+  const fetchGroupInstance = async () => {
+    const groupIns = await loadGroupIns(forumGroup);
+    if (groupIns) {
+      setGroup(groupIns);
     }
   };
 
   useEffect(() => {
+    setMenuOpen(false);
     setLoading(true);
-    loadGroupIns();
-    loadForumGroupPosts();
+    fetchGroupInstance();
   }, []);
+
+  useEffect(() => {
+    if (group !== null) {
+      loadForumGroupPosts();
+    }
+  }, [group]);
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.onclick = () => setMenuOpen(false);
+    } else {
+      document.body.onclick = null;
+    }
+  }, [menuOpen]);
 
   return (
     <main className="max-w-screen-lg mx-auto">
@@ -97,7 +106,7 @@ export const ForumDetail: React.FC = () => {
         </div>
       ) : (
         <>
-          <section className="w-full flex items-center justify-between mb-5">
+          <header className="w-full flex items-center justify-between mb-5">
             <div className="flex items-center">
               <Link to={routes.forum} className="hover:underline">
                 게시판
@@ -119,7 +128,7 @@ export const ForumDetail: React.FC = () => {
                 />
               </div>
             </div>
-          </section>
+          </header>
           {forumGroup === "jayugesipan" && (
             <section
               className="w-full h-80 bg-cover bg-center relative flex justify-center items-center"
@@ -134,7 +143,111 @@ export const ForumDetail: React.FC = () => {
             </section>
           )}
           {posts.length > 0 ? (
-            <section></section>
+            <section className="border border-gray-300 mt-20">
+              <div className="flex items-center justify-between p-3 border-b border-gray-300">
+                <div className="flex items-center">
+                  <h1 className="text-gray-500">정렬:</h1>
+                  <h1 className="mx-1">최근 활동</h1>
+                  <FontAwesomeIcon
+                    className="ml-2 text-gray-500"
+                    icon={faChevronDown}
+                  />
+                </div>
+                <button
+                  onClick={() => setMenuOpen(true)}
+                  className="px-10 py-3 bg-blue-800 text-white flex items-center relative"
+                >
+                  <span>게시물 작성하기</span>
+                  {menuOpen ? (
+                    <FontAwesomeIcon
+                      icon={faChevronUp}
+                      className="ml-3 text-gray-300"
+                    />
+                  ) : (
+                    <FontAwesomeIcon
+                      icon={faChevronDown}
+                      className="ml-3 text-gray-300"
+                    />
+                  )}
+
+                  {menuOpen && (
+                    <div
+                      style={{
+                        boxShadow:
+                          "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
+                      }}
+                      className="absolute top-full right-0  w-80 bg-white text-black"
+                    >
+                      <Link
+                        to={routes.forumCreatePost(forumGroup)}
+                        className="flex border-b border-gray-300 p-5 py-8  hover:text-blue-500 transition-all"
+                      >
+                        <div
+                          className="flex justify-center items-start mr-3"
+                          style={{ width: "10%" }}
+                        >
+                          <FontAwesomeIcon
+                            className="mt-2"
+                            icon={faCommentAlt}
+                          />
+                        </div>
+                        <div
+                          className="flex flex-col justify-start items-start"
+                          style={{ width: "90%" }}
+                        >
+                          <h1 className="font-medium mb-2">그룹 대화</h1>
+                          <h2>다른 회원들과 대화를 나눠보세요.</h2>
+                        </div>
+                      </Link>
+                      <Link
+                        to={routes.forumCreatePost(forumGroup)}
+                        className="flex p-5 py-8 hover:text-blue-500 transition-all"
+                      >
+                        <div
+                          className="flex justify-center items-start mr-3"
+                          style={{ width: "10%" }}
+                        >
+                          <FontAwesomeIcon
+                            className="mt-2"
+                            icon={faQuestionCircle}
+                          />
+                        </div>
+                        <div
+                          className="flex flex-col justify-start items-start"
+                          style={{ width: "90%" }}
+                        >
+                          <h1 className="font-medium">문의 게시물</h1>
+                          <h2>직접 커뮤니티 답변을 받아보세요.</h2>
+                        </div>
+                      </Link>
+                    </div>
+                  )}
+                </button>
+              </div>
+              <div
+                className="grid py-3 border-b border-gray-300"
+                style={{ gridTemplateColumns: "3fr 1fr 1fr" }}
+              >
+                <section></section>
+                <section className="flex justify-between items-center ">
+                  <FontAwesomeIcon className="mr-5" icon={faCommentAlt} />
+                  <FontAwesomeIcon className="mr-5" icon={faHeart} />
+                  <FontAwesomeIcon className="mr-5" icon={faEye} />
+                </section>
+                <section className="ml-5 flex items-center justify-start ">
+                  <h1 className="">최근 활동</h1>
+                </section>
+              </div>
+              <div>
+                {posts.map((elem, index) => (
+                  <ForumDetailPost
+                    post={elem}
+                    key={index}
+                    forumGroup={forumGroup}
+                  />
+                ))}
+              </div>
+            </section>
           ) : (
             <section className="flex flex-col justify-center items-center w-full border border-black mt-20 py-20">
               <h1 className="text-4xl font-medium ">

@@ -14,4 +14,10 @@ export interface ForumPostTypes {
   forumGroupId: string;
   id: string;
   views: number;
+  title: string;
+}
+
+export interface ForumDetailPostTypes {
+  post: ForumPostTypes;
+  forumGroup: string;
 }

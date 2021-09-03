@@ -13,6 +13,7 @@ import { dbService } from "../utils/firebase";
 
 export const Forum: React.FC = () => {
   const [forumGroup, setForumGroup] = useState<ForumGroupTypes[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const loadForumGroup = async (docs: any) => {
     let arr: ForumGroupTypes[] = [];
@@ -41,6 +42,7 @@ export const Forum: React.FC = () => {
   };
 
   useEffect(() => {
+    setMenuOpen(false);
     dbService
       .collection("forumGroup")
       .onSnapshot((ref) => loadForumGroup(ref.docs));
@@ -72,7 +74,7 @@ export const Forum: React.FC = () => {
             </h2>
           </section>
           <section className="w-full flex justify-end items-center mt-5">
-            <button className="bg-blue-800 text-white px-5 py-2 hover:opacity-70 transition-all">
+            <button className="relative bg-blue-800 text-white px-5 py-2 hover:opacity-70 transition-all">
               게시물 작성하기
             </button>
           </section>
