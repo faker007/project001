@@ -3,7 +3,6 @@ import {
   faCircleNotch,
   faEllipsisV,
   faSearch,
-  faUser,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -15,7 +14,12 @@ import { Editor } from "../components/Editor";
 import { ForumGroupTypes, ForumPostTypes } from "../types/Forum.types";
 import { routes } from "../utils/constants";
 import { authService, dbService } from "../utils/firebase";
-import { findForumGroupId, isLoggedIn, loadGroupIns } from "../utils/utils";
+import {
+  deleteImgFromFirebase,
+  findForumGroupId,
+  isLoggedIn,
+  loadGroupIns,
+} from "../utils/utils";
 import { v4 as uuid } from "uuid";
 
 export const ForumCreatePost: React.FC = () => {
@@ -62,14 +66,25 @@ export const ForumCreatePost: React.FC = () => {
       id: uuid(),
       views: 0,
       title: postTitle,
+      imgUrlList: editorImgList,
     };
 
     try {
       await dbService.collection("forumPost").add(post);
+
+      const forumGroupId = await findForumGroupId(forumGroup);
+      const forumGroupQuery = dbService.doc(`forumGroup/${forumGroupId}`);
+      const forumGroupResult = await forumGroupQuery.get();
+
+      if (forumGroupResult.exists) {
+        await forumGroupQuery.update({
+          posts: [post.id, ...forumGroupResult.data()?.posts],
+        });
+      }
+
       history.push(routes.forumDetail(forumGroup));
     } catch (error) {
       console.log(error);
-      toast.error(error);
     }
   };
 
@@ -80,8 +95,15 @@ export const ForumCreatePost: React.FC = () => {
     setPostTitle(value);
   };
 
+  const handleClickToCancelCreatePost = async () => {
+    for (const url of editorImgList) {
+      await deleteImgFromFirebase(url);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
+    setEditorValue("");
     fetchGroupInstance();
   }, []);
 
@@ -156,6 +178,7 @@ export const ForumCreatePost: React.FC = () => {
           </main>
           <aside className="flex items-center justify-end mt-5 pb-20">
             <Link
+              onClick={handleClickToCancelCreatePost}
               to={routes.forumDetail(forumGroup)}
               className="mr-5 p-3 px-14  border border-blue-800 hover:opacity-60 transition-all text-blue-800"
             >

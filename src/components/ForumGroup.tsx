@@ -11,6 +11,10 @@ export const ForumGroup: React.FC<ForumGroupTypes> = ({
   posts,
   views,
 }) => {
+  if (korName === "자유게시판") {
+    console.log(posts);
+  }
+
   return (
     <div
       className={`p-5 ${

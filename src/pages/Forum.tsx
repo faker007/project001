@@ -1,32 +1,32 @@
-import { faCommentAlt, faEye } from "@fortawesome/free-regular-svg-icons";
 import { faCircleNotch, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { EMLINK } from "constants";
 import { useEffect } from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { ForumGroup } from "../components/ForumGroup";
-import { LoadingSpinner } from "../components/LoadingSpinner";
 import { ForumGroupTypes } from "../types/Forum.types";
-import { routes } from "../utils/constants";
 import { dbService } from "../utils/firebase";
 
 export const Forum: React.FC = () => {
   const [forumGroup, setForumGroup] = useState<ForumGroupTypes[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const loadForumGroup = async (docs: any) => {
+  const loadForumGroup = async () => {
     let arr: ForumGroupTypes[] = [];
 
-    for (const doc of docs) {
+    const query = dbService.collection("forumGroup");
+    const result = await query.get();
+
+    for (const doc of result.docs) {
       if (doc.exists) {
         const data: ForumGroupTypes = {
-          enName: doc.data().enName,
-          korName: doc.data().korName,
-          participants: doc.data().participants,
-          posts: doc.data().posts,
-          views: doc.data().views,
+          enName: doc.get("enName"),
+          korName: doc.get("korName"),
+          participants: doc.get("participants"),
+          posts: doc.get("posts"),
+          views: doc.get("views"),
         };
+        console.log(data);
         arr.push(data);
       }
     }
@@ -38,19 +38,19 @@ export const Forum: React.FC = () => {
       arr = alteredArr;
     }
 
-    setForumGroup(arr);
+    setForumGroup([...arr]);
+    setLoading(false);
   };
 
   useEffect(() => {
+    setLoading(true);
+    loadForumGroup();
     setMenuOpen(false);
-    dbService
-      .collection("forumGroup")
-      .onSnapshot((ref) => loadForumGroup(ref.docs));
   }, []);
 
   return (
     <div className="max-w-screen-lg mx-auto">
-      {forumGroup.length > 0 ? (
+      {!loading ? (
         <>
           <section className="w-full flex items-center justify-between mb-5">
             <h1 className="text-3xl font-medium">게시판</h1>

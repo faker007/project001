@@ -50,6 +50,7 @@ export const ForumDetail: React.FC = () => {
               id: doc.data().id,
               views: doc.data().views,
               title: doc.data().title,
+              imgUrlList: doc.data().imgUrlList,
             };
 
             arr.push(elem);

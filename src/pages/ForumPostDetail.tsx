@@ -1,22 +1,36 @@
-import { faCommentAlt, faEye } from "@fortawesome/free-regular-svg-icons";
+import {
+  faCommentAlt,
+  faEye,
+  faHeart,
+} from "@fortawesome/free-regular-svg-icons";
 import {
   faBell,
   faChevronRight,
   faCircleNotch,
   faEllipsisV,
   faSearch,
+  faShare,
+  faShareAlt,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { useEffect } from "react";
 import { Link, useHistory, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Editor } from "../components/Editor";
-import { DB_UserTypes } from "../types/DBService.types";
+import { DB_COMMENT, DB_UserTypes } from "../types/DBService.types";
 import { ForumGroupTypes, ForumPostTypes } from "../types/Forum.types";
 import { routes } from "../utils/constants";
 import { authService, dbService } from "../utils/firebase";
-import { loadGroupIns, timeCalc } from "../utils/utils";
+import {
+  deleteImgFromFirebase,
+  isLoggedIn,
+  loadGroupIns,
+  timeCalc,
+} from "../utils/utils";
+import { v4 as uuid } from "uuid";
+import { ForumPostComment } from "../components/ForumPostComment";
 
 export const ForumPostDetail: React.FC = () => {
   const { forumGroup, postId } =
@@ -28,6 +42,9 @@ export const ForumPostDetail: React.FC = () => {
   const [creator, setCreator] = useState<DB_UserTypes | null>(null);
   const [commentEditorValue, setCommentEditorValue] = useState<string>("");
   const [commentimgList, setCommentimgList] = useState<string[]>([]);
+  const [comments, setComments] = useState<DB_COMMENT[]>([]);
+  const [refetchComments, setRefetchComments] = useState(false);
+
   const history = useHistory();
 
   const loadPostFromId = async () => {
@@ -46,6 +63,7 @@ export const ForumPostDetail: React.FC = () => {
             id: doc.data().id,
             title: doc.data().title,
             views: doc.data().views,
+            imgUrlList: doc.data().imgUrlList,
           });
         }
       }
@@ -78,19 +96,119 @@ export const ForumPostDetail: React.FC = () => {
     } catch (error) {
       console.log(error);
     }
+  };
 
+  const loadComments = async () => {
+    if (post) {
+      try {
+        const query = dbService
+          .collection("forumComment")
+          .where("postID", "==", post.id);
+        const result = await query.get();
+
+        const arr: DB_COMMENT[] = [];
+        for (const doc of result.docs) {
+          if (doc.exists) {
+            arr.push({
+              body: doc.data().body,
+              replyComments: doc.data().replyComments,
+              postID: doc.data().postID,
+              imgUrlList: doc.data().imgUrlList,
+              creatorId: doc.data().creatorId,
+              createdAt: doc.data().createdAt,
+              id: doc.data().id,
+            });
+          }
+        }
+
+        setComments([...arr].sort((a, b) => b.createdAt - a.createdAt));
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    setRefetchComments(false);
     setLoading(false);
+  };
+
+  const handleClickToCreateComment = async () => {
+    if (!isLoggedIn()) {
+      return;
+    }
+
+    if (commentEditorValue.length <= 11) {
+      toast.error("댓글은 최소 11자 이상 되어야 합니다.");
+      return;
+    }
+
+    if (post && authService.currentUser) {
+      const comment: DB_COMMENT = {
+        body: commentEditorValue,
+        createdAt: Date.now(),
+        creatorId: authService.currentUser.uid,
+        id: uuid(),
+        imgUrlList: commentimgList,
+        postID: post.id,
+        replyComments: [],
+      };
+
+      try {
+        await dbService.collection("forumComment").add(comment);
+
+        const postQuery = dbService
+          .collection("forumPost")
+          .where("id", "==", post.id);
+        const postResult = await postQuery.get();
+
+        for (const doc of postResult.docs) {
+          if (doc.exists) {
+            await dbService.doc(`forumPost/${doc.id}`).update({
+              comments: [...doc.data().comments, comment.id],
+            });
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+
+      setCommentEditorValue("");
+      setRefetchComments(true);
+    } else {
+      toast.error("댓글을 작성하는데 문제가 발생했습니다.");
+    }
+  };
+
+  const handleClickToCancelCreateComment = async () => {
+    setCommentEditorValue("");
+    try {
+      for (const url of commentimgList) {
+        await deleteImgFromFirebase(url);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    setCommentimgList([]);
   };
 
   useEffect(() => {
     setLoading(true);
+    setCommentEditorValue("");
     fetchGroupInstance();
     loadPostFromId();
   }, []);
 
   useEffect(() => {
+    if (refetchComments) {
+      setLoading(true);
+      loadComments();
+    }
+  }, [refetchComments]);
+
+  useEffect(() => {
     if (post !== null) {
       loadCreator(post.creatorId);
+      loadComments();
     }
   }, [post]);
 
@@ -163,9 +281,40 @@ export const ForumPostDetail: React.FC = () => {
                   className="mt-5"
                   dangerouslySetInnerHTML={{ __html: post.body }}
                 ></section>
-                <footer className="mt-20">
-                  <div className="border border-gray-300 p-5">
-                    <section className="p-5  flex items-center border-b border-gray-300">
+                <section className="flex items-center justify-between pt-5">
+                  <div className="flex">
+                    <div className="mr-5">
+                      <FontAwesomeIcon className="mr-2" icon={faCommentAlt} />
+                      <span>댓글</span>
+                    </div>
+                    <div>
+                      <FontAwesomeIcon
+                        icon={faHeart}
+                        className="mr-2 text-red-500"
+                      />
+                      <span>0</span>
+                    </div>
+                  </div>
+                  <div>
+                    <FontAwesomeIcon
+                      className="mr-2 text-blue-500"
+                      icon={faShare}
+                    />
+                    <span>공유</span>
+                  </div>
+                </section>
+                <footer className="mt-10">
+                  <div>
+                    {comments.map((elem, index) => (
+                      <ForumPostComment
+                        comment={elem}
+                        key={index}
+                        setRefetch={setRefetchComments}
+                      />
+                    ))}
+                  </div>
+                  <div className="border border-gray-300 p-5 mt-5">
+                    <section className="p-5 pt-3 flex items-center border-b border-gray-300">
                       <FontAwesomeIcon
                         icon={faUserCircle}
                         className="text-gray-500 text-3xl mr-3"
@@ -181,10 +330,16 @@ export const ForumPostDetail: React.FC = () => {
                       setImgUrlList={setCommentimgList}
                     />
                     <section className="flex items-center justify-end">
-                      <button className="mr-5 px-10 py-3 hover:opacity-60 transition-all">
+                      <button
+                        onClick={handleClickToCancelCreateComment}
+                        className="mr-5 px-10 py-3 hover:opacity-60 transition-all"
+                      >
                         취소
                       </button>
-                      <button className="px-14 py-2 bg-blue-800 text-white hover:opacity-60 transition-all">
+                      <button
+                        onClick={handleClickToCreateComment}
+                        className="px-14 py-2 bg-blue-800 text-white hover:opacity-60 transition-all"
+                      >
                         게시
                       </button>
                     </section>
