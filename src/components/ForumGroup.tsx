@@ -6,15 +6,10 @@ import { routes } from "../utils/constants";
 
 export const ForumGroup: React.FC<ForumGroupTypes> = ({
   enName,
-  participants,
   korName,
   posts,
   views,
 }) => {
-  if (korName === "자유게시판") {
-    console.log(posts);
-  }
-
   return (
     <div
       className={`p-5 ${

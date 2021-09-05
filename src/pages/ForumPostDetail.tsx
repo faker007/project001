@@ -10,11 +10,11 @@ import {
   faEllipsisV,
   faSearch,
   faShare,
-  faShareAlt,
+  faTrashAlt,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useEffect } from "react";
 import { Link, useHistory, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -25,6 +25,7 @@ import { routes } from "../utils/constants";
 import { authService, dbService } from "../utils/firebase";
 import {
   deleteImgFromFirebase,
+  handleDeleteForumPost,
   isLoggedIn,
   loadGroupIns,
   timeCalc,
@@ -44,6 +45,8 @@ export const ForumPostDetail: React.FC = () => {
   const [commentimgList, setCommentimgList] = useState<string[]>([]);
   const [comments, setComments] = useState<DB_COMMENT[]>([]);
   const [refetchComments, setRefetchComments] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const commentRef = useRef(null);
 
   const history = useHistory();
 
@@ -191,6 +194,17 @@ export const ForumPostDetail: React.FC = () => {
     setCommentimgList([]);
   };
 
+  const handleDeletePost = async () => {
+    try {
+      if (post) {
+        await handleDeleteForumPost(post);
+        history.push(routes.forumDetail(forumGroup));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     setCommentEditorValue("");
@@ -211,6 +225,16 @@ export const ForumPostDetail: React.FC = () => {
       loadComments();
     }
   }, [post]);
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.onclick = () => {
+        setMenuOpen(false);
+      };
+    } else {
+      document.body.onclick = null;
+    }
+  }, [menuOpen]);
 
   return (
     <div className="max-w-screen-lg mx-auto">
@@ -264,14 +288,32 @@ export const ForumPostDetail: React.FC = () => {
                     />
                     <span className="text-sm">{creator.email}</span>
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center relative">
                     <span className="mr-3 text-sm">
                       {post && timeCalc(post.createdAt)}
                     </span>
                     <FontAwesomeIcon
+                      onClick={() => setMenuOpen(true)}
                       icon={faEllipsisV}
                       className="text-gray-500 cursor-pointer text-lg hover:opacity-70 transition-all"
                     />
+                    {menuOpen && (
+                      <div
+                        className="absolute top-full right-0 w-48  p-5  bg-white"
+                        style={{
+                          boxShadow:
+                            "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
+                        }}
+                      >
+                        <div
+                          onClick={handleDeletePost}
+                          className="w-full hover:text-blue-500 transition-all cursor-pointer"
+                        >
+                          <FontAwesomeIcon className="mr-5" icon={faTrashAlt} />
+                          <span>삭제</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </section>
                 <section className="mt-5 ">
@@ -303,7 +345,7 @@ export const ForumPostDetail: React.FC = () => {
                     <span>공유</span>
                   </div>
                 </section>
-                <footer className="mt-10">
+                <footer ref={commentRef} className="mt-10">
                   <div>
                     {comments.map((elem, index) => (
                       <ForumPostComment
@@ -347,67 +389,77 @@ export const ForumPostDetail: React.FC = () => {
                 </footer>
               </div>
               <div className="w-1/4 p-5 pt-0 px-6 flex flex-col items-center">
-                <section className="mb-5 flex flex-col w-full">
-                  <button className="hover:opacity-70  transition-all w-full text-center bg-blue-800 text-white mb-3 py-2">
-                    댓글
-                  </button>
-                  <button className="hover:opacity-70 transition-all w-full border border-blue-800 py-2">
-                    <FontAwesomeIcon
-                      className="text-blue-800 text-xl mr-3"
-                      icon={faBell}
-                    />
-                    <span className="text-blue-800">게시물 팔로우</span>
-                  </button>
-                </section>
-                <section className="w-full border border-gray-300 p-5">
-                  <div className="mb-5">
-                    <FontAwesomeIcon icon={faEye} className="text-xl mr-3" />
-                    <span>조회수 {post.views}회</span>
-                  </div>
-                  <div>
-                    <FontAwesomeIcon
-                      icon={faCommentAlt}
-                      className="text-xl mr-3"
-                    />
-                    <span>댓글 {post.comments.length}개</span>
-                  </div>
-                </section>
-                <section className="mt-5 p-5 w-full border border-gray-300">
-                  <h1 className="mb-3">유사 게시물</h1>
-                </section>
-                <section className="mt-5 p-5 w-full border border-gray-300">
-                  <h1 className="mb-3 font-medium">카테고리</h1>
-                  <ul>
-                    <li className="mb-3 text-sm hover:text-blue-800 transition-all">
-                      <Link to={routes.forumDetail("jayugesipan")}>
-                        자유게시판
-                      </Link>
-                    </li>
-                    <li className="mb-3 text-sm hover:text-blue-800 transition-all">
-                      <Link to={routes.forumDetail("mentoring-cunceon")}>
-                        멘토링 (춘천)
-                      </Link>
-                    </li>
-                    <li className="mb-3 text-sm hover:text-blue-800 transition-all">
-                      <Link to={routes.forumDetail("gwating-cunceon")}>
-                        과팅 (춘천)
-                      </Link>
-                    </li>
-                    <li className="mb-3 text-sm hover:text-blue-800 transition-all">
-                      <Link to={routes.forumDetail("miting-cunceon")}>
-                        미팅 (춘천)
-                      </Link>
-                    </li>
-                    <li className="mb-3 text-sm hover:text-blue-800 transition-all">
-                      <Link to={routes.forumDetail("somoim-cunceon")}>
-                        소모임 (춘천)
-                      </Link>
-                    </li>
-                    <li className="mb-3 text-sm hover:text-blue-800 transition-all">
-                      <Link to={routes.forum}>전체 카테고리 보기</Link>
-                    </li>
-                  </ul>
-                </section>
+                <div className="sticky top-4 w-full">
+                  <section className="mb-5 flex flex-col w-full">
+                    <button
+                      onClick={() => {
+                        if (commentRef.current !== null) {
+                          // @ts-ignore
+                          commentRef.current.scrollIntoView();
+                        }
+                      }}
+                      className="hover:opacity-70  transition-all w-full text-center bg-blue-800 text-white mb-3 py-2"
+                    >
+                      댓글
+                    </button>
+                    <button className="hover:opacity-70 transition-all w-full border border-blue-800 py-2">
+                      <FontAwesomeIcon
+                        className="text-blue-800 text-xl mr-3"
+                        icon={faBell}
+                      />
+                      <span className="text-blue-800">게시물 팔로우</span>
+                    </button>
+                  </section>
+                  <section className="w-full border border-gray-300 p-5">
+                    <div className="mb-5">
+                      <FontAwesomeIcon icon={faEye} className="text-xl mr-3" />
+                      <span>조회수 {post.views}회</span>
+                    </div>
+                    <div>
+                      <FontAwesomeIcon
+                        icon={faCommentAlt}
+                        className="text-xl mr-3"
+                      />
+                      <span>댓글 {post.comments.length}개</span>
+                    </div>
+                  </section>
+                  <section className="mt-5 p-5 w-full border border-gray-300">
+                    <h1 className="mb-3">유사 게시물</h1>
+                  </section>
+                  <section className="mt-5 p-5 w-full border border-gray-300">
+                    <h1 className="mb-3 font-medium">카테고리</h1>
+                    <ul>
+                      <li className="mb-3 text-sm hover:text-blue-800 transition-all">
+                        <Link to={routes.forumDetail("jayugesipan")}>
+                          자유게시판
+                        </Link>
+                      </li>
+                      <li className="mb-3 text-sm hover:text-blue-800 transition-all">
+                        <Link to={routes.forumDetail("mentoring-cunceon")}>
+                          멘토링 (춘천)
+                        </Link>
+                      </li>
+                      <li className="mb-3 text-sm hover:text-blue-800 transition-all">
+                        <Link to={routes.forumDetail("gwating-cunceon")}>
+                          과팅 (춘천)
+                        </Link>
+                      </li>
+                      <li className="mb-3 text-sm hover:text-blue-800 transition-all">
+                        <Link to={routes.forumDetail("miting-cunceon")}>
+                          미팅 (춘천)
+                        </Link>
+                      </li>
+                      <li className="mb-3 text-sm hover:text-blue-800 transition-all">
+                        <Link to={routes.forumDetail("somoim-cunceon")}>
+                          소모임 (춘천)
+                        </Link>
+                      </li>
+                      <li className="mb-3 text-sm hover:text-blue-800 transition-all">
+                        <Link to={routes.forum}>전체 카테고리 보기</Link>
+                      </li>
+                    </ul>
+                  </section>
+                </div>
               </div>
             </div>
           )}

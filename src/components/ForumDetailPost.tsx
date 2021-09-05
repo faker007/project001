@@ -1,4 +1,8 @@
-import { faEllipsisV, faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEllipsisV,
+  faTrash,
+  faUserCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -6,13 +10,20 @@ import { Link } from "react-router-dom";
 import { DB_UserTypes } from "../types/DBService.types";
 import { ForumDetailPostTypes } from "../types/Forum.types";
 import { routes } from "../utils/constants";
-import { getUserFromUid, timeCalc } from "../utils/utils";
+import {
+  getUserFromUid,
+  handleDeleteForumPost,
+  timeCalc,
+} from "../utils/utils";
 
 export const ForumDetailPost: React.FC<ForumDetailPostTypes> = ({
+  post,
   post: { title, views, id, forumGroupId, creatorId, comments, createdAt },
   forumGroup,
+  setRefetch,
 }) => {
   const [creator, setCreator] = useState<DB_UserTypes | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const loadCreator = async () => {
     const creator = await getUserFromUid(creatorId);
@@ -21,9 +32,28 @@ export const ForumDetailPost: React.FC<ForumDetailPostTypes> = ({
     }
   };
 
+  const handleDeletePost = async () => {
+    try {
+      await handleDeleteForumPost(post);
+      setRefetch(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     loadCreator();
   }, []);
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.onclick = () => {
+        setMenuOpen(false);
+      };
+    } else {
+      document.body.onclick = null;
+    }
+  }, [menuOpen]);
 
   return (
     <div
@@ -46,16 +76,34 @@ export const ForumDetailPost: React.FC<ForumDetailPostTypes> = ({
         <span className="mr-3">{0}</span>
         <span className="mr-3">{views}</span>
       </section>
-      <section className="ml-8 flex justify-between items-center">
+      <section className="ml-8 flex justify-between items-center relative">
         <FontAwesomeIcon
           icon={faUserCircle}
           className="text-gray-500 text-2xl"
         />
         <span className="text-sm">{timeCalc(createdAt)}</span>
         <FontAwesomeIcon
+          onClick={() => setMenuOpen(true)}
           icon={faEllipsisV}
           className="text-gray-500  cursor-pointer"
         />
+        {menuOpen && (
+          <div
+            style={{
+              boxShadow:
+                "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
+            }}
+            className="z-10 absolute top-full right-0 w-40 p-5 bg-white"
+          >
+            <div
+              onClick={handleDeletePost}
+              className="hover:text-blue-800 transition-all cursor-pointer hover:opacity-70"
+            >
+              <FontAwesomeIcon className="mr-5" icon={faTrash} />
+              <span>삭제</span>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

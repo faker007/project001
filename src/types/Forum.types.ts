@@ -1,9 +1,9 @@
-import { DB_COMMENT, DB_UserTypes } from "./DBService.types";
+import React from "react";
+import { DB_COMMENT } from "./DBService.types";
 
 export interface ForumGroupTypes {
   enName: string;
   korName: string;
-  participants: string[];
   posts: string[];
   views: number;
 }
@@ -23,6 +23,7 @@ export interface ForumPostTypes {
 export interface ForumDetailPostTypes {
   post: ForumPostTypes;
   forumGroup: string;
+  setRefetch: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface ForumPostCommentTypes {

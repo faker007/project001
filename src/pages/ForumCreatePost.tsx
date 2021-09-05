@@ -82,7 +82,7 @@ export const ForumCreatePost: React.FC = () => {
         });
       }
 
-      history.push(routes.forumDetail(forumGroup));
+      history.push(routes.forumPostDetail(forumGroup, post.id));
     } catch (error) {
       console.log(error);
     }

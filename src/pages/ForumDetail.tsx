@@ -28,6 +28,7 @@ export const ForumDetail: React.FC = () => {
   const [group, setGroup] = useState<ForumGroupTypes | null>(null);
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(true);
+  const [refetchPosts, setRefetchPosts] = useState(false);
 
   const loadForumGroupPosts = async () => {
     if (group) {
@@ -66,6 +67,7 @@ export const ForumDetail: React.FC = () => {
       }
     }
 
+    setRefetchPosts(false);
     setLoading(false);
   };
 
@@ -95,6 +97,13 @@ export const ForumDetail: React.FC = () => {
       document.body.onclick = null;
     }
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (refetchPosts) {
+      setLoading(true);
+      loadForumGroupPosts();
+    }
+  }, [refetchPosts]);
 
   return (
     <main className="max-w-screen-lg mx-auto">
@@ -177,14 +186,14 @@ export const ForumDetail: React.FC = () => {
                         boxShadow:
                           "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
                       }}
-                      className="absolute top-full right-0  w-80 bg-white text-black"
+                      className="z-10 absolute top-full right-0  w-80 bg-white text-black"
                     >
                       <Link
                         to={routes.forumCreatePost(forumGroup)}
-                        className="flex border-b border-gray-300 p-5 py-8  hover:text-blue-500 transition-all"
+                        className="flex border-b border-gray-300 bg-white p-5 py-8  hover:text-blue-500 transition-all"
                       >
                         <div
-                          className="flex justify-center items-start mr-3"
+                          className="flex justify-center items-start mr-3 "
                           style={{ width: "10%" }}
                         >
                           <FontAwesomeIcon
@@ -202,7 +211,7 @@ export const ForumDetail: React.FC = () => {
                       </Link>
                       <Link
                         to={routes.forumCreatePost(forumGroup)}
-                        className="flex p-5 py-8 hover:text-blue-500 transition-all"
+                        className="flex p-5 py-8 hover:text-blue-500 bg-white transition-all"
                       >
                         <div
                           className="flex justify-center items-start mr-3"
@@ -245,6 +254,7 @@ export const ForumDetail: React.FC = () => {
                     post={elem}
                     key={index}
                     forumGroup={forumGroup}
+                    setRefetch={setRefetchPosts}
                   />
                 ))}
               </div>

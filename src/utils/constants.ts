@@ -48,10 +48,6 @@ export const FORUM_GROUPS: { enName: string; korName: string }[] = [
     korName: "자유게시판",
   },
   {
-    enName: "jayugesipan",
-    korName: "자유게시판",
-  },
-  {
     enName: "mentoring-cunceon",
     korName: "멘토링 (춘천)",
   },

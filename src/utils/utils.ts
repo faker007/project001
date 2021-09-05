@@ -1,6 +1,7 @@
 import moment from "moment";
+import { toast } from "react-toastify";
 import { DB_Group, DB_UserTypes } from "../types/DBService.types";
-import { ForumGroupTypes } from "../types/Forum.types";
+import { ForumGroupTypes, ForumPostTypes } from "../types/Forum.types";
 import { CAMPUS_GROUPS } from "./constants";
 import { authService, dbService, storageService } from "./firebase";
 
@@ -136,7 +137,6 @@ export const loadGroupIns = async (
         return {
           enName: doc.data().enName,
           korName: doc.data().korName,
-          participants: doc.data().participants,
           posts: doc.data().posts,
           views: doc.data().views,
         };
@@ -147,4 +147,75 @@ export const loadGroupIns = async (
   }
 
   return null;
+};
+
+export const handleDeleteForumPost = async (post: ForumPostTypes) => {
+  if (!isLoggedIn()) {
+    return;
+  }
+
+  if (!post || post.creatorId != authService.currentUser?.uid) {
+    toast.error("해당 게시물을 지울 권한이 없습니다.");
+    return;
+  }
+
+  try {
+    // delete from forumGroup
+    const forumGroupQuery = dbService.doc(`forumGroup/${post.forumGroupId}`);
+    const forumGroupQueryResult = await forumGroupQuery.get();
+    if (forumGroupQueryResult.exists) {
+      const forumGroupPosts = forumGroupQueryResult.get("posts");
+      if (Array.isArray(forumGroupPosts)) {
+        const afterPosts = forumGroupPosts.filter(
+          (postId) => postId !== post.id
+        );
+        await forumGroupQuery.update({
+          posts: [...afterPosts],
+        });
+      }
+    }
+
+    // delete comments
+    for (const commentId of post.comments) {
+      const commentQuery = dbService
+        .collection("forumComment")
+        .where("id", "==", commentId);
+      const commentQueryResult = await commentQuery.get();
+      for (const doc of commentQueryResult.docs) {
+        if (doc.exists) {
+          // 이미지가 있으면 삭제
+          const commentImgList = doc.get("imgUrlList");
+          if (commentImgList && Array.isArray(commentImgList)) {
+            for (const imgUrl of commentImgList) {
+              await deleteImgFromFirebase(imgUrl);
+            }
+          }
+
+          console.log(doc.id);
+
+          await dbService.doc(`forumComment/${doc.id}`).delete();
+        }
+      }
+    }
+    // delete post
+    const postQuery = dbService
+      .collection("forumPost")
+      .where("id", "==", post.id);
+    const postQueryResult = await postQuery.get();
+
+    for (const doc of postQueryResult.docs) {
+      if (doc.exists) {
+        // 이미지가 있으면 삭제
+        const postImgList = doc.get("imgUrlList");
+        if (postImgList && Array.isArray(postImgList)) {
+          for (const imgUrl of postImgList) {
+            await deleteImgFromFirebase(imgUrl);
+          }
+        }
+        await dbService.doc(`forumPost/${doc.id}`).delete();
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };
