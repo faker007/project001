@@ -42,6 +42,13 @@ export const routes = {
   },
 };
 
+export const FORUM_HERO_IMGS = [
+  "https://firebasestorage.googleapis.com/v0/b/campus-mate-c41f8.appspot.com/o/greeenGomdol.jpg?alt=media&token=d877d8d4-a114-41fd-a64b-f2217b2cdf16",
+  "https://firebasestorage.googleapis.com/v0/b/campus-mate-c41f8.appspot.com/o/pinkGomdol.jpg?alt=media&token=d2f358a4-03a4-4a9d-9cd5-d2f77f55305f",
+  "https://firebasestorage.googleapis.com/v0/b/campus-mate-c41f8.appspot.com/o/whiteGomdol.jpg?alt=media&token=20f173e5-c4e8-4fc6-8afb-16f86c2d185e",
+  "https://firebasestorage.googleapis.com/v0/b/campus-mate-c41f8.appspot.com/o/%EC%9A%B0%EB%A6%AC%EB%91%90%EB%A6%AC.webp?alt=media&token=d9d97bb2-b222-4cfe-be86-a9e3e97e0740",
+];
+
 export const FORUM_GROUPS: { enName: string; korName: string }[] = [
   {
     enName: "jayugesipan",

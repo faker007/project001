@@ -12,7 +12,7 @@ import { ForumGroup } from "../components/ForumGroup";
 import { LoginCore } from "../components/LoginCore";
 import { PopUpLogin } from "../components/PopUpLogin";
 import { ForumGroupTypes } from "../types/Forum.types";
-import { FORUM_GROUPS, routes } from "../utils/constants";
+import { FORUM_GROUPS, FORUM_HERO_IMGS, routes } from "../utils/constants";
 import { dbService } from "../utils/firebase";
 import { isLoggedIn } from "../utils/utils";
 
@@ -96,14 +96,19 @@ export const Forum: React.FC = () => {
               />
             </div>
           </section>
-          <section
-            className="w-full h-80 bg-cover bg-center flex flex-col justify-center items-center "
-            style={{
-              backgroundImage: `url("https://firebasestorage.googleapis.com/v0/b/campus-mate-c41f8.appspot.com/o/forum.webp?alt=media&token=0d2f2686-69ea-44fe-8470-4d1a5535d222")`,
-            }}
-          >
-            <h1 className="text-6xl font-medium mb-5">만남의 광장</h1>
-            <h2 className="text-lg font-medium">
+          <section className="relative w-full h-80  flex flex-col justify-center items-center  ">
+            <div
+              className="absolute top-0 left-0 w-full h-full bg-cover bg-center filter blur-sm"
+              style={{
+                backgroundImage: `url(${
+                  FORUM_HERO_IMGS[
+                    Math.floor(Math.random() * FORUM_HERO_IMGS.length)
+                  ]
+                })`,
+              }}
+            ></div>
+            <h1 className="z-10 text-6xl font-semibold mb-5 ">강원 대학교</h1>
+            <h2 className="z-10 text-lg font-medium">
               멘토링, 과팅, 미팅, 소모임, 동아리, 스터디 등등의 교류활동이
               이루어지는 게시판입니다.
             </h2>
