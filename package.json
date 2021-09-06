@@ -16,6 +16,7 @@
     "@types/node": "^12.0.0",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
+    "cross-env": "^7.0.3",
     "firebase": "^8.10.0",
     "moment": "^2.29.1",
     "quill-image-resize-module": "^3.0.0",
@@ -33,10 +34,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "prebuild": "npm run tailwind:prod",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "tailwind:build": "npx tailwindcss -i ./src/style/tailwind.css -o ./src/style/styles.css"
+    "tailwind:build": "npx tailwindcss -i ./src/style/tailwind.css -o ./src/style/styles.css",
+    "tailwind:prod": "cross-env NODE_ENV=production npm run tailwind:build"
   },
   "eslintConfig": {
     "extends": [
