@@ -20,7 +20,9 @@ import { ForumDetailPost } from "../components/ForumDetailPost";
 import { ForumGroupTypes, ForumPostTypes } from "../types/Forum.types";
 import { routes } from "../utils/constants";
 import { dbService } from "../utils/firebase";
-import { findForumGroupId, loadGroupIns } from "../utils/utils";
+import { findForumGroupId, isLoggedIn, loadGroupIns } from "../utils/utils";
+import { useHistory } from "react-router-dom";
+import { PopUpLogin } from "../components/PopUpLogin";
 
 export const ForumDetail: React.FC = () => {
   const { forumGroup } = useParams<{ forumGroup: string }>();
@@ -29,6 +31,8 @@ export const ForumDetail: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(true);
   const [refetchPosts, setRefetchPosts] = useState(false);
+  const [loginMode, setLoginMode] = useState(false);
+  const history = useHistory();
 
   const loadForumGroupPosts = async () => {
     if (group) {
@@ -78,9 +82,37 @@ export const ForumDetail: React.FC = () => {
     }
   };
 
+  const handleClickToCreatePost = () => {
+    if (!isLoggedIn()) {
+      setLoginMode(true);
+    } else {
+      history.push(routes.forumCreatePost(forumGroup));
+    }
+  };
+
+  const increaseViews = async () => {
+    try {
+      const query = dbService
+        .collection("forumGroup")
+        .where("enName", "==", forumGroup);
+      const result = await query.get();
+
+      for (const doc of result.docs) {
+        if (doc.exists) {
+          await dbService.doc(`forumGroup/${doc.id}`).update({
+            views: +doc.get("views") + 1,
+          });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     setMenuOpen(false);
     setLoading(true);
+    increaseViews();
     fetchGroupInstance();
   }, []);
 
@@ -188,8 +220,8 @@ export const ForumDetail: React.FC = () => {
                       }}
                       className="z-10 absolute top-full right-0  w-80 bg-white text-black"
                     >
-                      <Link
-                        to={routes.forumCreatePost(forumGroup)}
+                      <section
+                        onClick={handleClickToCreatePost}
                         className="flex border-b border-gray-300 bg-white p-5 py-8  hover:text-blue-500 transition-all"
                       >
                         <div
@@ -208,9 +240,9 @@ export const ForumDetail: React.FC = () => {
                           <h1 className="font-medium mb-2">그룹 대화</h1>
                           <h2>다른 회원들과 대화를 나눠보세요.</h2>
                         </div>
-                      </Link>
-                      <Link
-                        to={routes.forumCreatePost(forumGroup)}
+                      </section>
+                      <section
+                        onClick={handleClickToCreatePost}
                         className="flex p-5 py-8 hover:text-blue-500 bg-white transition-all"
                       >
                         <div
@@ -229,7 +261,7 @@ export const ForumDetail: React.FC = () => {
                           <h1 className="font-medium">문의 게시물</h1>
                           <h2>직접 커뮤니티 답변을 받아보세요.</h2>
                         </div>
-                      </Link>
+                      </section>
                     </div>
                   )}
                 </button>
@@ -251,6 +283,7 @@ export const ForumDetail: React.FC = () => {
               <div>
                 {posts.map((elem, index) => (
                   <ForumDetailPost
+                    setLoginMode={setLoginMode}
                     post={elem}
                     key={index}
                     forumGroup={forumGroup}
@@ -268,8 +301,8 @@ export const ForumDetail: React.FC = () => {
                 첫 카테고리 게시물을 작성해보세요.
               </h2>
               <section className="flex mt-14">
-                <Link
-                  to={routes.forumCreatePost(forumGroup)}
+                <section
+                  onClick={handleClickToCreatePost}
                   className="flex items-start p-5 border border-black hover:text-blue-500 cursor-pointer transition-all"
                 >
                   <FontAwesomeIcon icon={faCommentAlt} className="mr-3 mt-2" />
@@ -277,9 +310,9 @@ export const ForumDetail: React.FC = () => {
                     <h1 className="text-lg font-medium">그룹 대화</h1>
                     <h2 className="mt-2">다른 회원들과 대화를 나눠보세요.</h2>
                   </div>
-                </Link>
-                <Link
-                  to={routes.forumCreateQuestion(forumGroup)}
+                </section>
+                <section
+                  onClick={handleClickToCreatePost}
                   className="flex p-5 border-t border-b border-r border-black hover:text-blue-500 cursor-pointer transition-all"
                 >
                   <FontAwesomeIcon
@@ -290,11 +323,17 @@ export const ForumDetail: React.FC = () => {
                     <h1 className="text-lg font-medium">문의 게시물</h1>
                     <h2 className="mt-2">직접 커뮤니티 답변을 받아보세요.</h2>
                   </div>
-                </Link>
+                </section>
               </section>
             </section>
           )}
         </>
+      )}
+      {loginMode && (
+        <PopUpLogin
+          popUpLoginMode={loginMode}
+          setPopUpLoginMode={setLoginMode}
+        />
       )}
     </main>
   );

@@ -29,12 +29,14 @@ export const ForumPostComment: React.FC<ForumPostCommentTypes> = ({
     id,
   },
   setRefetch,
+  setLoginMode,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [creator, setCreator] = useState<DB_UserTypes | null>(null);
 
   const handleDeleteComment = async () => {
     if (!isLoggedIn()) {
+      setLoginMode(true);
       return;
     }
 

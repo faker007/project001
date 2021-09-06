@@ -24,9 +24,11 @@ export interface ForumDetailPostTypes {
   post: ForumPostTypes;
   forumGroup: string;
   setRefetch: React.Dispatch<React.SetStateAction<boolean>>;
+  setLoginMode: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface ForumPostCommentTypes {
   comment: DB_COMMENT;
   setRefetch: React.Dispatch<React.SetStateAction<boolean>>;
+  setLoginMode: React.Dispatch<React.SetStateAction<boolean>>;
 }

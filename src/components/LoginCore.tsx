@@ -72,6 +72,7 @@ export const LoginCore: React.FC<LoginModeTypes> = ({
         }
       } catch (error) {
         console.log(`error: ${error}`);
+        // @ts-ignore
         setErrorMsg(error.message);
       }
     }
@@ -107,7 +108,7 @@ export const LoginCore: React.FC<LoginModeTypes> = ({
             </span>
           </h2>
           {emailMode ? (
-            <div className="w-2/3 mb-14">
+            <div className=" w-2/3 mb-14">
               <form onSubmit={handleSubmit}>
                 <div className="flex flex-col mb-3 ">
                   <label className="text-xl" htmlFor={"email"}>
@@ -163,7 +164,7 @@ export const LoginCore: React.FC<LoginModeTypes> = ({
             </div>
           ) : (
             <>
-              <div className="w-2/3 p-2 border  text-center flex items-center bg-blue-800 text-white mb-3 hover:opacity-80 transition-opacity">
+              <div className=" w-2/3 p-2 border  text-center flex items-center bg-blue-800 text-white mb-3 hover:opacity-80 transition-opacity">
                 <div className="w-2/3 flex items-center justify-between">
                   <FontAwesomeIcon
                     icon={faFacebookSquare}

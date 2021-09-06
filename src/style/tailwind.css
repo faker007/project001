@@ -13,5 +13,10 @@
   font-size: 1rem !important;
 }
 
+.ql-video {
+  max-width: 100%;
+  height: auto;
+}
+
 @tailwind components;
 @tailwind utilities;

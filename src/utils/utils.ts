@@ -149,14 +149,16 @@ export const loadGroupIns = async (
   return null;
 };
 
-export const handleDeleteForumPost = async (post: ForumPostTypes) => {
+export const handleDeleteForumPost = async (
+  post: ForumPostTypes
+): Promise<boolean> => {
   if (!isLoggedIn()) {
-    return;
+    return false;
   }
 
   if (!post || post.creatorId != authService.currentUser?.uid) {
     toast.error("해당 게시물을 지울 권한이 없습니다.");
-    return;
+    return false;
   }
 
   try {
@@ -215,7 +217,10 @@ export const handleDeleteForumPost = async (post: ForumPostTypes) => {
         await dbService.doc(`forumPost/${doc.id}`).delete();
       }
     }
+
+    return true;
   } catch (error) {
     console.log(error);
+    return false;
   }
 };

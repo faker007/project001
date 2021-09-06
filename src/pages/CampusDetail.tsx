@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { CampusDetailPopup } from "../components/CampusDetailPopup";
 import { CampusDetailPost } from "../components/CampusDetailPost";
 import { CampusHeader } from "../components/CampusHeader";
@@ -15,7 +16,7 @@ import { PopUpLogin } from "../components/PopUpLogin";
 import { CampusDetailUseParamsTypes } from "../types/CampusDetail.types";
 import { CampusTab } from "../types/CampusHeader.types";
 import { DB_POST } from "../types/DBService.types";
-import { dbService } from "../utils/firebase";
+import { authService, dbService } from "../utils/firebase";
 import { findGroupId, isLoggedIn } from "../utils/utils";
 
 export const CampusDetail: React.FC = () => {
@@ -67,10 +68,23 @@ export const CampusDetail: React.FC = () => {
     if (!isLoggedIn()) {
       setWriteMode(false);
       setLoginMode(true);
-    } else {
-      setLoginMode(false);
-      setWriteMode(true);
+      return;
     }
+
+    if (groupIns && groupIns.participants) {
+      const groupValidate = groupIns?.participants?.find(
+        // @ts-ignore
+        (elem) => elem === authService.currentUser?.uid
+      );
+      if (!groupValidate) {
+        setWriteMode(false);
+        toast.error("해당 캠퍼스에 가입한 후에 글을 작성할 수 있습니다.");
+        return;
+      }
+    }
+
+    setLoginMode(false);
+    setWriteMode(true);
   };
 
   const loadGroupId = async () => {
@@ -122,7 +136,9 @@ export const CampusDetail: React.FC = () => {
                     className="text-4xl mr-3 text-gray-500"
                     icon={faUserCircle}
                   />
-                  <span className="text-lg">공유할 내용을 입력하세요.</span>
+                  <span className="text-lg font-medium">
+                    공유할 내용을 입력하세요.
+                  </span>
                 </div>
                 <div>
                   <FontAwesomeIcon className="mr-5 text-lg" icon={faCamera} />

@@ -32,6 +32,7 @@ import {
 } from "../utils/utils";
 import { v4 as uuid } from "uuid";
 import { ForumPostComment } from "../components/ForumPostComment";
+import { PopUpLogin } from "../components/PopUpLogin";
 
 export const ForumPostDetail: React.FC = () => {
   const { forumGroup, postId } =
@@ -46,6 +47,8 @@ export const ForumPostDetail: React.FC = () => {
   const [comments, setComments] = useState<DB_COMMENT[]>([]);
   const [refetchComments, setRefetchComments] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loginMode, setLoginMode] = useState(false);
+  const [commentCreateMode, setCommentCreateMode] = useState(false);
   const commentRef = useRef(null);
 
   const history = useHistory();
@@ -136,6 +139,7 @@ export const ForumPostDetail: React.FC = () => {
 
   const handleClickToCreateComment = async () => {
     if (!isLoggedIn()) {
+      setLoginMode(true);
       return;
     }
 
@@ -192,22 +196,57 @@ export const ForumPostDetail: React.FC = () => {
     }
 
     setCommentimgList([]);
+    setCommentCreateMode(false);
   };
 
   const handleDeletePost = async () => {
+    if (!isLoggedIn()) {
+      setLoginMode(true);
+      return;
+    }
+
     try {
       if (post) {
-        await handleDeleteForumPost(post);
-        history.push(routes.forumDetail(forumGroup));
+        const ok = await handleDeleteForumPost(post);
+        if (ok) {
+          history.push(routes.forumDetail(forumGroup));
+        }
       }
     } catch (error) {
       console.log(error);
     }
   };
 
+  const increaseViews = async () => {
+    try {
+      const query = dbService.collection("forumPost").where("id", "==", postId);
+      const result = await query.get();
+
+      for (const doc of result.docs) {
+        if (doc.exists) {
+          await dbService.doc(`forumPost/${doc.id}`).update({
+            views: +doc.get("views") + 1,
+          });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleClickToVerifyCreateComment = () => {
+    if (!isLoggedIn()) {
+      setLoginMode(true);
+      return;
+    }
+
+    setCommentCreateMode(true);
+  };
+
   useEffect(() => {
     setLoading(true);
     setCommentEditorValue("");
+    increaseViews();
     fetchGroupInstance();
     loadPostFromId();
   }, []);
@@ -320,7 +359,7 @@ export const ForumPostDetail: React.FC = () => {
                   <h1 className="text-4xl font-medium">{post.title}</h1>
                 </section>
                 <section
-                  className="mt-5"
+                  className="my-10"
                   dangerouslySetInnerHTML={{ __html: post.body }}
                 ></section>
                 <section className="flex items-center justify-between pt-5">
@@ -349,43 +388,61 @@ export const ForumPostDetail: React.FC = () => {
                   <div>
                     {comments.map((elem, index) => (
                       <ForumPostComment
+                        setLoginMode={setLoginMode}
                         comment={elem}
                         key={index}
                         setRefetch={setRefetchComments}
                       />
                     ))}
                   </div>
-                  <div className="border border-gray-300 p-5 mt-5">
-                    <section className="p-5 pt-3 flex items-center border-b border-gray-300">
+                  {commentCreateMode ? (
+                    <div className="border border-gray-300 p-5 mt-5">
+                      <section className="p-5 pt-3 flex items-center border-b border-gray-300">
+                        <FontAwesomeIcon
+                          icon={faUserCircle}
+                          className="text-gray-500 text-3xl mr-3"
+                        />
+                        <span className="font-medium">
+                          {authService.currentUser?.email}
+                        </span>
+                      </section>
+                      <Editor
+                        value={commentEditorValue}
+                        setValue={setCommentEditorValue}
+                        imgUrlList={commentimgList}
+                        setImgUrlList={setCommentimgList}
+                      />
+                      <section className="flex items-center justify-end">
+                        <button
+                          onClick={handleClickToCancelCreateComment}
+                          className="mr-5 px-10 py-3 hover:opacity-60 transition-all"
+                        >
+                          취소
+                        </button>
+                        <button
+                          onClick={handleClickToCreateComment}
+                          className={`px-14 py-2 ${
+                            commentEditorValue.length <= 11
+                              ? "bg-gray-500 cursor-not-allowed"
+                              : "bg-blue-800"
+                          } text-white hover:opacity-60 transition-all`}
+                        >
+                          게시
+                        </button>
+                      </section>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={handleClickToVerifyCreateComment}
+                      className="border border-gray-300 p-5 mt-5 flex items-center cursor-pointer hover:border-black transition-all font-medium"
+                    >
                       <FontAwesomeIcon
                         icon={faUserCircle}
                         className="text-gray-500 text-3xl mr-3"
                       />
-                      <span className="font-medium">
-                        {authService.currentUser?.email}
-                      </span>
-                    </section>
-                    <Editor
-                      value={commentEditorValue}
-                      setValue={setCommentEditorValue}
-                      imgUrlList={commentimgList}
-                      setImgUrlList={setCommentimgList}
-                    />
-                    <section className="flex items-center justify-end">
-                      <button
-                        onClick={handleClickToCancelCreateComment}
-                        className="mr-5 px-10 py-3 hover:opacity-60 transition-all"
-                      >
-                        취소
-                      </button>
-                      <button
-                        onClick={handleClickToCreateComment}
-                        className="px-14 py-2 bg-blue-800 text-white hover:opacity-60 transition-all"
-                      >
-                        게시
-                      </button>
-                    </section>
-                  </div>
+                      <span>댓글을 입력해 주세요.</span>
+                    </div>
+                  )}
                 </footer>
               </div>
               <div className="w-1/4 p-5 pt-0 px-6 flex flex-col items-center">
@@ -464,6 +521,12 @@ export const ForumPostDetail: React.FC = () => {
             </div>
           )}
         </>
+      )}
+      {loginMode && (
+        <PopUpLogin
+          popUpLoginMode={loginMode}
+          setPopUpLoginMode={setLoginMode}
+        />
       )}
     </div>
   );

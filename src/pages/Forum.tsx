@@ -9,21 +9,25 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { domainToASCII } from "url";
 import { ForumGroup } from "../components/ForumGroup";
+import { LoginCore } from "../components/LoginCore";
+import { PopUpLogin } from "../components/PopUpLogin";
 import { ForumGroupTypes } from "../types/Forum.types";
 import { FORUM_GROUPS, routes } from "../utils/constants";
 import { dbService } from "../utils/firebase";
+import { isLoggedIn } from "../utils/utils";
 
 export const Forum: React.FC = () => {
   const [forumGroup, setForumGroup] = useState<ForumGroupTypes[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginMode, setLoginMode] = useState(false);
 
-  const loadForumGroup = async () => {
-    const query = dbService.collection("forumGroup");
-    const result = await query.get({ source: "server" });
+  const loadForumGroup = async (docs: any) => {
+    // const query = dbService.collection("forumGroup");
+    // const result = await query.get({ source: "server" });
     let arr: ForumGroupTypes[] = [];
 
-    for (const doc of result.docs) {
+    for (const doc of docs) {
       if (doc.exists) {
         const data: ForumGroupTypes = {
           enName: doc.get("enName"),
@@ -50,15 +54,14 @@ export const Forum: React.FC = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    setLoading(true);
-    setMenuOpen(false);
-    loadForumGroup();
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
+  const handleMenuOpen = () => {
+    if (!isLoggedIn()) {
+      setMenuOpen(false);
+      setLoginMode(true);
+    } else {
+      setMenuOpen(true);
+    }
+  };
 
   useEffect(() => {
     if (menuOpen) {
@@ -67,6 +70,18 @@ export const Forum: React.FC = () => {
       document.body.style.overflow = "";
     }
   }, [menuOpen]);
+
+  useEffect(() => {
+    setLoading(true);
+    setMenuOpen(false);
+    dbService
+      .collection("forumGroup")
+      .onSnapshot((ref) => loadForumGroup(ref.docs));
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   return (
     <div className="max-w-screen-lg mx-auto">
@@ -95,7 +110,7 @@ export const Forum: React.FC = () => {
           </section>
           <section className="w-full flex justify-end items-center mt-5">
             <button
-              onClick={() => setMenuOpen(true)}
+              onClick={handleMenuOpen}
               className="relative bg-blue-800 text-white px-5 py-2 hover:opacity-70 transition-all"
             >
               <span>게시물 작성하기</span>
@@ -128,7 +143,7 @@ export const Forum: React.FC = () => {
                 <div className="grid grid-cols-4 gap-5  ">
                   {forumGroup.map((elem, index) => (
                     <Link
-                      className="border  border-gray-300 p-3 text-center hover:text-blue-800   duration-300 transition-all ring-2 ring-gray-400 font-medium hover:opacity-60"
+                      className="border  border-gray-300 p-3 text-center hover:text-blue-800 transition-all ring-2 ring-gray-400 font-medium hover:opacity-60"
                       key={index}
                       to={routes.forumCreatePost(elem.enName)}
                     >
@@ -138,6 +153,12 @@ export const Forum: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+          {loginMode && (
+            <PopUpLogin
+              popUpLoginMode={loginMode}
+              setPopUpLoginMode={setLoginMode}
+            />
           )}
         </>
       ) : (

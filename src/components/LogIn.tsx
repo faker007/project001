@@ -23,7 +23,7 @@ export const LogIn: React.FC<LoginModeTypes> = ({
   }, []);
 
   return (
-    <div className="w-full h-screen min-h-screen fixed top-0 left-0 flex justify-center items-center bg-white ">
+    <div className="z-20 w-full h-screen min-h-screen fixed top-0 left-0 flex justify-center items-center bg-white ">
       <FontAwesomeIcon
         onClick={handleLoginMode}
         icon={faTimesCircle}

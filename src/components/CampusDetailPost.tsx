@@ -199,7 +199,6 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
       setRefetch(true);
     } catch (error) {
       console.log(error);
-      toast.error(error);
     }
   };
 
@@ -286,7 +285,7 @@ export const CampusDetailPost: React.FC<CampusDetailPostTypes> = ({
             </section>
           </header>
           <main
-            className="my-5"
+            className="my-10"
             dangerouslySetInnerHTML={{ __html: body }}
           ></main>
           <aside className="w-full flex items-center justify-between pb-10 border-b border-gray-300">

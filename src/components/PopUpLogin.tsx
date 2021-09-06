@@ -25,16 +25,12 @@ export const PopUpLogin: React.FC<PopUpLoginTypes> = ({
   }, []);
 
   return (
-    <div className="fixed top-0 left-0 w-full h-screen backdrop-filter backdrop-blur-sm flex justify-center items-center">
+    <div className="z-20 fixed top-0 left-0 w-full h-screen backdrop-filter backdrop-blur-sm flex justify-center items-center">
       <div
         onClick={handleClickToExit}
         className="fixed top-0 left-0 w-full h-full bg-black opacity-60"
       ></div>
-      <FontAwesomeIcon
-        icon={faTimesCircle}
-        onClick={() => setPopUpLoginMode(false)}
-        className="fixed top-0 right-0 m-14 text-5xl cursor-pointer hover:text-red-500 transition-colors"
-      />
+
       <div className="max-w-lg w-full py-14 px-5 bg-white z-10">
         <LoginCore
           loginMode={popUpLoginMode}

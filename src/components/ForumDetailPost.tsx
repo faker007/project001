@@ -13,6 +13,7 @@ import { routes } from "../utils/constants";
 import {
   getUserFromUid,
   handleDeleteForumPost,
+  isLoggedIn,
   timeCalc,
 } from "../utils/utils";
 
@@ -21,6 +22,7 @@ export const ForumDetailPost: React.FC<ForumDetailPostTypes> = ({
   post: { title, views, id, forumGroupId, creatorId, comments, createdAt },
   forumGroup,
   setRefetch,
+  setLoginMode,
 }) => {
   const [creator, setCreator] = useState<DB_UserTypes | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,6 +35,10 @@ export const ForumDetailPost: React.FC<ForumDetailPostTypes> = ({
   };
 
   const handleDeletePost = async () => {
+    if (!isLoggedIn()) {
+      setLoginMode(true);
+    }
+
     try {
       await handleDeleteForumPost(post);
       setRefetch(true);
