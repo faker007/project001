@@ -67,6 +67,7 @@ export const CampusDetailComment: React.FC<CampusDetailCommentTypes> = ({
 
   const handleDeleteComment = async () => {
     if (!isLoggedIn()) {
+      toast.error("해당 댓글을 지울 권한이 없습니다.");
       return;
     }
 
